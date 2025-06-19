@@ -126,7 +126,7 @@ export default function GetStartedScreen() {
     <View style={{ marginBottom: 12 }}>
       <View
         style={{
-          borderWidth: 1,
+          borderWidth: 0.5,
           borderColor: error ? 'red' : '#999', // light black border
           borderRadius: 5,
           paddingHorizontal: 10,
@@ -214,10 +214,11 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: wp('4%'),
-    fontWeight: '500',
+    fontWeight: 'bold', // Make it bold
     marginBottom: hp('1%'),
-    color: '#999',
+    color: '#333', // Optional: darker for better readability
   },
+  
   required: {
     color: 'red',
   },

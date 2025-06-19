@@ -113,50 +113,52 @@ const ChatScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      {isLoadingMore && <ActivityIndicator size="large" style={{ marginVertical: 8 }} />}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+      <View style={styles.container}>
+        {isLoadingMore && <ActivityIndicator size="large" style={{ marginVertical: 8 }} />}
 
-      <View style={styles.content}>
-        <FlatList
-          ref={flatListRef}
-          data={displayedMessages}
-          keyExtractor={(item, index) => `${item.timestamp}-${index}`}
-          renderItem={renderMessage}
-          inverted
-          contentContainerStyle={styles.messagesList}
-          onEndReached={() => {
-            if (chatMessages && page * MESSAGES_PER_PAGE < chatMessages.length) {
-              setPage((prev) => prev + 1);
-              setIsLoadingMore(true);
-            }
-          }}
-          onEndReachedThreshold={0.1}
-        />
-      </View>
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-        style={styles.inputWrapper}
-      >
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            value={newMessage}
-            onChangeText={setNewMessage}
-            placeholder="Type a message..."
-            placeholderTextColor="#999"
+        <View style={styles.content}>
+          <FlatList
+            ref={flatListRef}
+            data={displayedMessages}
+            keyExtractor={(item, index) => `${item.timestamp}-${index}`}
+            renderItem={renderMessage}
+            inverted
+            contentContainerStyle={styles.messagesList}
+            onEndReached={() => {
+              if (chatMessages && page * MESSAGES_PER_PAGE < chatMessages.length) {
+                setPage((prev) => prev + 1);
+                setIsLoadingMore(true);
+              }
+            }}
+            onEndReachedThreshold={0.1}
           />
-          <TouchableOpacity
-            style={styles.sendButton}
-            onPress={handleSend}
-            disabled={newMessage.trim() === ''}
-          >
-            <Ionicons name="send" size={18} color="white" />
-          </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
-    </View>
+
+        <View style={styles.inputWrapper}>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              value={newMessage}
+              onChangeText={setNewMessage}
+              placeholder="Type a message..."
+              placeholderTextColor="#999"
+            />
+            <TouchableOpacity
+              style={styles.sendButton}
+              onPress={handleSend}
+              disabled={newMessage.trim() === ''}
+            >
+              <Ionicons name="send" size={18} color="white" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -186,10 +188,6 @@ const styles = StyleSheet.create({
   myTimestamp: { color: '#666', alignSelf: 'flex-end' },
   otherTimestamp: { color: '#666', alignSelf: 'flex-end' },
   inputWrapper: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: '#f0f0f0',
     borderTopWidth: 1,
     borderTopColor: '#ddd',
