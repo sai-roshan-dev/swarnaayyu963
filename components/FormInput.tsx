@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet, Platform } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Platform, TextStyle } from 'react-native';
 import { Controller } from 'react-hook-form';
 
 interface InputFieldProps {
@@ -10,6 +10,7 @@ interface InputFieldProps {
   rules?: any;
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
   secureTextEntry?: boolean;
+  labelStyle?: TextStyle;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -20,11 +21,12 @@ const InputField: React.FC<InputFieldProps> = ({
   rules,
   keyboardType = 'default',
   secureTextEntry = false,
+  labelStyle,
 }) => {
   return (
     <View style={styles.container}>
       {label && (
-        <Text style={styles.label}>
+        <Text style={[styles.label, labelStyle]}>
           {label} <Text style={{ color: 'red' }}>*</Text>
         </Text>
       )}

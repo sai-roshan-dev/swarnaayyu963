@@ -8,7 +8,6 @@ export default function AppLayout() {
       <Stack.Screen name="ai-voice" />
       <Stack.Screen name="settings" />
       <Stack.Screen name="history" />
-      <Stack.Screen name="explore" />
     </Stack>
   )
 }

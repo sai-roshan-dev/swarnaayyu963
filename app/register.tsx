@@ -14,6 +14,8 @@ import { useAuthMutation } from "../hooks/useAuthMutation";
 import InputField from '@/components/FormInput';
 import { Controller, useForm } from 'react-hook-form';
 import PhoneInput from '@/components/FormPhoneInput';
+import RNPickerSelect from 'react-native-picker-select';
+import countryList from '../utils/countryList';
 
 export default function GetStartedScreen() {
   const { mutate, isPending } = useAuthMutation('register');
@@ -63,10 +65,11 @@ export default function GetStartedScreen() {
         <InputField
           control={control}
           name="fullname"
-          label="Name"
+          label="Full Name"
           placeholder="Enter your name"
           rules={{ required: 'Name is required' }}
-        /> 
+          labelStyle={styles.label}
+        />
 
         <InputField
           control={control}
@@ -81,6 +84,7 @@ export default function GetStartedScreen() {
               message: 'Age must be a valid number with 2 digits',
             },
           }}
+          labelStyle={styles.label}
         />
 
         <Text style={styles.label}>
@@ -110,13 +114,51 @@ export default function GetStartedScreen() {
         />
         {errors.gender && <Text style={[styles.errorText, {paddingBottom: 5}]}>{errors.gender.message}</Text>}
 
-        <InputField
-          control={control}
-          name="location"
-          label="Location"
-          placeholder="Enter your location"
-          rules={{ required: 'Location is required' }}
+        <Text style={styles.label}>
+  Country <Text style={{ color: 'red' }}>*</Text>
+</Text>
+
+<Controller
+  control={control}
+  name="location"
+  rules={{ required: 'Country is required' }}
+  render={({ field: { onChange, value }, fieldState: { error } }) => (
+    <View style={{ marginBottom: 12 }}>
+      <View
+        style={{
+          borderWidth: 1,
+          borderColor: error ? 'red' : '#999', // light black border
+          borderRadius: 5,
+          paddingHorizontal: 10,
+          paddingVertical: Platform.OS === 'ios' ? 12 : 0,
+        }}
+      >
+        <RNPickerSelect
+          onValueChange={onChange}
+          value={value}
+          items={countryList}
+          placeholder={{ label: 'Select your country', value: '' }}
+          style={{
+            inputIOS: {
+              color: '#000',
+              fontSize: 16,
+              paddingVertical: 8,
+            },
+            inputAndroid: {
+              color: '#000',
+              fontSize: 16,
+            },
+            placeholder: {
+              color: '#999',
+            },
+          }}
         />
+      </View>
+      {error && <Text style={styles.errorText}>{error.message}</Text>}
+    </View>
+  )}
+/>
+
 
         <PhoneInput
           control={control}
@@ -174,7 +216,7 @@ const styles = StyleSheet.create({
     fontSize: wp('4%'),
     fontWeight: '500',
     marginBottom: hp('1%'),
-    color: '#000',
+    color: '#999',
   },
   required: {
     color: 'red',

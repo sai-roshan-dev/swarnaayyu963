@@ -14,7 +14,7 @@ export default {
     splash: {
       image: "./assets/images/splash.png",
       resizeMode: "cover",
-      backgroundColor: "#000000",
+      backgroundColor: "#ffffff",
     },
 
     ios: {
@@ -23,14 +23,14 @@ export default {
       },
       supportsTablet: true,
       bundleIdentifier: "com.sai.swarnaayu",
-      icon: "./assets/icons/image.png",
+      icon: "./assets/images/image.png",
     },
 
     android: {
       package: "com.sai.swarnaayu",
       adaptiveIcon: {
         foregroundImage: "./assets/images/image.png",
-        backgroundColor: "#ffffff",
+        backgroundColor: "#000000",
       },
       permissions: ["android.permission.RECORD_AUDIO"],
     },

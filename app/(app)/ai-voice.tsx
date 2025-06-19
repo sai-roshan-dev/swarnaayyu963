@@ -1,177 +1,114 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Audio } from 'expo-av';
-import * as Speech from 'expo-speech';
 import type { Recording } from 'expo-av/build/Audio';
 import VoiceBubble from '@/components/VoiceBubble';
 import VoiceActions from '@/components/VoiceActions';
 import { useAuthRedirect } from '@/hooks/useAuthCheck';
 import { useRouter } from 'expo-router';
 import { useBackExit } from '@/hooks/useBackClick';
+import { useConversation } from '@11labs/react';
+import { getSignedUrl } from '@/utils/api';
 
 export default function AiVoice() {
-  const [recording, setRecording] = useState<Recording | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [responseText, setResponseText] = useState('');
   const [status, setStatus] = useState<'idle' | 'connecting' | 'listening' | 'mic-off' | 'speaking'>('idle');
-  const recordingRef = useRef<Recording | null>(null);
   const router = useRouter();
-  const api_key = process.env.OpenAI_API_KEY;
   useBackExit();
-
   useAuthRedirect();
-  const recordingOptions = {
-    android: {
-      extension: '.m4a',
-      outputFormat: 2,
-      audioEncoder: 3,
-      sampleRate: 44100,
-      numberOfChannels: 2,
-      bitRate: 128000,
-    },
-    ios: {
-      extension: '.m4a',
-      audioQuality: 2,
-      sampleRate: 44100,
-      numberOfChannels: 2,
-      bitRate: 128000,
-      linearPCMBitDepth: 16,
-      linearPCMIsBigEndian: false,
-      linearPCMIsFloat: false,
-    },
-    web: {
-      mimeType: 'audio/webm',
-      bitsPerSecond: 128000,
-    },
-    isMeteringEnabled: true,
-  };  
 
-  const speak = (text: string) => {
-    setStatus('speaking');
-    Speech.speak(text, {
-      language: 'en',
-      rate: 1.0,
-      onDone: () => {
-        console.log('🗣️ AI finished speaking');
-        setStatus('idle');
-      },
-      onStopped: () => {
-        console.log('🛑 Speech was stopped');
-        setStatus('idle');
-      }
-    });
-  };
-
-  const startRecording = async () => {
-    try {
+  // ElevenLabs ConvAI conversation hook
+  const conversation = useConversation({
+    onConnect: () => {
+      console.log('Connected to ElevenLabs ConvAI');
       setStatus('listening');
-      await Audio.requestPermissionsAsync();
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
-      const { recording } = await Audio.Recording.createAsync(recordingOptions);
-      recordingRef.current = recording;
-      setRecording(recording);
-      setTimeout(stopRecording, 3000); 
-    } catch (err) {
-      console.error('Failed to start recording', err);
+      setIsLoading(false);
+    },
+    onDisconnect: () => {
+      console.log('Disconnected from ElevenLabs ConvAI');
       setStatus('idle');
-    }
-  };
-
-  const stopRecording = async () => {
-    try {
-      setRecording(null);
-      const recording = recordingRef.current;
-      await recording?.stopAndUnloadAsync();
-      const uri = recording?.getURI();
-      transcribeAudio(uri);
-    } catch (err) {
-      console.error('Failed to stop recording', err);
-    }
-  };
-
-  const transcribeAudio = async (uri: any) => {
-    setIsLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', {
-        uri,
-        name: 'audio.m4a',
-        type: 'audio/m4a',
-      } as any);
-      formData.append('model', 'whisper-1');
-      formData.append('language', 'en');
-
-      const transcription = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${api_key}`,
-          'Content-Type': 'multipart/form-data',
-        },
-        body: formData,
-      });
-
-      const result = await transcription.json();
-      fetchAIResponse(result.text);
-    } catch (error) {
-      console.error('Transcription error:', error);
       setIsLoading(false);
-    }
-  };
-
-  const fetchAIResponse = async (userText: any) => {
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${api_key}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [{ role: 'user', content: userText }],
-        }),
-      });
-
-      const data = await response.json();
-      const aiReply = data?.choices?.[0]?.message?.content;
-
-      if (!aiReply) {
-        console.error('Invalid AI response:', data);
-        return;
+    },
+    onMessage: (message) => {
+      if (message.source === 'ai') {
+        console.log('AI speaking:', message);
+        setStatus('speaking');
+      } else if (message.source === 'user') {
+        console.log('User speaking:', message);
+        setStatus('listening');
       }
+    },
+    onError: (error) => {
+      console.error('ConvAI Error:', error);
+      setStatus('idle');
+      setIsLoading(false);
+    },
+  });
 
-      setResponseText(aiReply);
-      setStatus('speaking');
-      speak(aiReply);
-      // Speech.speak(aiReply, {
-      //   language: 'en',
-      //   rate: 1.0,
-      //   onDone: () => setStatus('idle'),
-      // });
-    } catch (err) {
-      console.error('AI response error:', err);
-    } finally {
+  const startConversation = async () => {
+    try {
+      setIsLoading(true);
+      setStatus('connecting');
+      
+      // Get signed URL from ElevenLabs
+      const signedUrl = await getSignedUrl();
+      
+      // Start the conversation session
+      await conversation.startSession({
+        signedUrl,
+        onConnect: () => {
+          console.log('Session connected');
+          setStatus('listening');
+          setIsLoading(false);
+        },
+        onDisconnect: () => {
+          console.log('Session disconnected');
+          setStatus('idle');
+          setIsLoading(false);
+        },
+        onError: (error) => {
+          console.error('Session error:', error);
+          setStatus('idle');
+          setIsLoading(false);
+        },
+      });
+    } catch (error) {
+      console.error('Failed to start conversation:', error);
+      setStatus('idle');
       setIsLoading(false);
     }
+  };
+
+  const handleVoiceButtonPress = () => {
+    if (status === 'idle') {
+      startConversation();
+    }
+    // The conversation will handle disconnection automatically
+    // when the user stops speaking or the session ends
   };
 
   return (
-    <>
-   
     <View style={styles.container}>
-       
-        <View style={{ marginBottom: 50}}>
-      <TouchableOpacity onPress={startRecording} disabled={status !== 'idle'}>
-        <VoiceBubble status={status} />
-      </TouchableOpacity>
+      <View style={{ marginBottom: 50 }}>
+        <TouchableOpacity 
+          onPress={handleVoiceButtonPress} 
+          disabled={isLoading}
+        >
+          <VoiceBubble status={status} />
+        </TouchableOpacity>
       </View>
 
-      {isLoading && <ActivityIndicator size="large" style={{ marginTop: 20 }} />}
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" />
+          <Text style={styles.loadingText}>
+            {status === 'connecting' ? 'Connecting to AI...' : 'Processing...'}
+          </Text>
+        </View>
+      )}
 
       <VoiceActions
         status={status}
-        
         onMicToggle={() => {
           if (status === 'mic-off') {
             setStatus('idle');
@@ -180,8 +117,7 @@ export default function AiVoice() {
           }
         }}
       />
-     </View>
-     </>
+    </View>
   );
 }
 
@@ -190,20 +126,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    //padding: 20,
+    backgroundColor: '#f5f5f5',
   },
-  responseBox: {
-    marginTop: 30,
-    padding: 20,
-    borderRadius: 10,
-    backgroundColor: '#f0f0f0',
+  loadingContainer: {
+    alignItems: 'center',
+    marginTop: 20,
   },
-  responseText: {
+  loadingText: {
+    marginTop: 10,
     fontSize: 16,
-    textAlign: 'center',
+    color: '#666',
   },
-  link:{
-    color: '#007BFF',
-    marginTop: 20
-  }
 });
