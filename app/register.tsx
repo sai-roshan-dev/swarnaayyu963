@@ -14,8 +14,30 @@ import { useAuthMutation } from "../hooks/useAuthMutation";
 import InputField from '@/components/FormInput';
 import { Controller, useForm } from 'react-hook-form';
 import PhoneInput from '@/components/FormPhoneInput';
-import RNPickerSelect from 'react-native-picker-select';
-import countryList from '../utils/countryList';
+import { Picker } from '@react-native-picker/picker';
+
+const staticCountryList = [
+  { label: 'India', value: 'India' },
+  { label: 'United States', value: 'United States' },
+  { label: 'Brazil', value: 'Brazil' },
+  { label: 'Australia', value: 'Australia' },
+  { label: 'Canada', value: 'Canada' },
+  { label: 'Germany', value: 'Germany' },
+  { label: 'France', value: 'France' },
+  { label: 'Japan', value: 'Japan' },
+  { label: 'South Africa', value: 'South Africa' },
+  { label: 'United Kingdom', value: 'United Kingdom' },
+  { label: 'Italy', value: 'Italy' },
+  { label: 'Mexico', value: 'Mexico' },
+  { label: 'Russia', value: 'Russia' },
+  { label: 'China', value: 'China' },
+  { label: 'Argentina', value: 'Argentina' },
+  { label: 'Turkey', value: 'Turkey' },
+  { label: 'Egypt', value: 'Egypt' },
+  { label: 'Spain', value: 'Spain' },
+  { label: 'Indonesia', value: 'Indonesia' },
+  { label: 'Nigeria', value: 'Nigeria' },
+];
 
 export default function RegisterScreen() {
   const { mutate, isPending } = useAuthMutation('register');
@@ -115,50 +137,28 @@ export default function RegisterScreen() {
         {errors.gender && <Text style={[styles.errorText, {paddingBottom: 5}]}>{errors.gender.message}</Text>}
 
         <Text style={styles.label}>
-  Country <Text style={{ color: 'red' }}>*</Text>
-</Text>
-
-<Controller
-  control={control}
-  name="location"
-  rules={{ required: 'Country is required' }}
-  render={({ field: { onChange, value }, fieldState: { error } }) => (
-    <View style={{ marginBottom: 12 }}>
-      <View
-        style={{
-          borderWidth: 0.5,
-          borderColor: error ? 'red' : '#999', // light black border
-          borderRadius: 5,
-          paddingHorizontal: 10,
-          paddingVertical: Platform.OS === 'ios' ? 12 : 0,
-        }}
-      >
-        <RNPickerSelect
-          onValueChange={onChange}
-          value={value}
-          items={countryList}
-          placeholder={{ label: 'Select your country', value: '' }}
-          style={{
-            inputIOS: {
-              color: '#000',
-              fontSize: 16,
-              paddingVertical: 8,
-            },
-            inputAndroid: {
-              color: '#000',
-              fontSize: 16,
-            },
-            placeholder: {
-              color: '#999',
-            },
-          }}
+          Country <Text style={{ color: 'red' }}>*</Text>
+        </Text>
+        <Controller
+          control={control}
+          name="location"
+          rules={{ required: 'Country is required' }}
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
+            <View style={{ marginBottom: 12, borderWidth: 0.5, borderColor: error ? 'red' : '#999', borderRadius: 5 }}>
+              <Picker
+                selectedValue={value}
+                onValueChange={onChange}
+                style={{ color: '#000', fontSize: 16 }}
+              >
+                <Picker.Item label="Select your country" value="" />
+                {staticCountryList.map((country) => (
+                  <Picker.Item key={country.value} label={country.label} value={country.value} />
+                ))}
+              </Picker>
+              {error && <Text style={styles.errorText}>{error.message}</Text>}
+            </View>
+          )}
         />
-      </View>
-      {error && <Text style={styles.errorText}>{error.message}</Text>}
-    </View>
-  )}
-/>
-
 
         <PhoneInput
           control={control}
