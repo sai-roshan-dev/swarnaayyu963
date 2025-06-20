@@ -4,11 +4,11 @@
     "slug": "voice-test",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "Aayu",
+    "scheme": "swarnaayu",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/aayu.png",
       "resizeMode": "cover",
       "backgroundColor": "#000000"
     },

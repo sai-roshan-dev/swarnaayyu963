@@ -12,7 +12,7 @@ export default {
     newArchEnabled: false,
 
     splash: {
-      image: "./assets/images/splash.png",
+      image: "./assets/images/aayu.png",
       resizeMode: "cover",
       backgroundColor: "#000000",
     },
