@@ -10,7 +10,7 @@ export default function TabOneScreen() {
       <View style={styles.header}>
         <IconSymbol size={48} name="house.fill" color="#007AFF" />
         <ThemedText type="title" style={styles.title}>
-          Welcome to SwarnAayu
+          Welcome to Aayu
         </ThemedText>
       </View>
       

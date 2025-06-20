@@ -57,7 +57,7 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title} >Welcome Back!</Text>
-      <Text style={styles.subtitle}>Log in to continue your journey with <Text style={{fontWeight: 'bold'}}>Swarn Aayu</Text>.</Text>
+      <Text style={styles.subtitle}>Log in to continue your journey with <Text style={{fontWeight: 'bold'}}>Aayu</Text>.</Text>
 
       <PhoneInput
         control={control}

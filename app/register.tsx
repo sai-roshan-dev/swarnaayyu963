@@ -57,7 +57,7 @@ export default function GetStartedScreen() {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
-        <Text style={styles.title}>Get Started with {"\n"}<Text style={styles.brand}>Swarn Aayu</Text></Text>
+        <Text style={styles.title}>Get Started with {"\n"}<Text style={styles.brand}>Aayu</Text></Text>
         <Text style={styles.subtitle}>
           I'm always here for talk—anytime, anywhere.
         </Text>

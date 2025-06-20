@@ -27,7 +27,7 @@
         <action android:name="android.intent.action.VIEW"/>
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="SwarnaAyu"/>
+        <data android:scheme="Aayu"/>
         <data android:scheme="com.sai.swarnaayu"/>
       </intent-filter>
     </activity>

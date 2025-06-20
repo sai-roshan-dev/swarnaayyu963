@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "SwarnAayu",
+    "name": "Aayu",
     "slug": "voice-test",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "SwarnaAyu",
+    "scheme": "Aayu",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "cover",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true,
@@ -19,7 +19,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/image.png",
-        "backgroundColor": "#FFFFFF"
+        "backgroundColor": "#000000"
       }
     },
     "web": {

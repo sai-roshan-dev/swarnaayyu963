@@ -19,21 +19,21 @@ const slides = [
     id: '1',
     title: 'Voice Your Tasks!',
     description:
-      'Unlock a new level of efficiency. Just speak, and Swarn Aayu takes care of the rest.',
+      'Unlock a new level of efficiency. Just speak, and Aayu takes care of the rest.',
     image: require('../assets/images/7.png'),
   },
   {
     id: '2',
     title: 'Your AI Assistant',
     description:
-      `I’m always here for a chat—anytime, anywhere.`,
+      `I'm always here for a chat—anytime, anywhere.`,
     image: require('../assets/images/8.png'),   //require('../assets/images/8.png'),
   },
   {
     id: '3',
     title: 'Lonely? Bored? Curious?',
     description:
-      'Just say hi—I’m ready to talk whenever you are.',
+      'Just say hi—I"m ready to talk whenever you are.',
     image: require('../assets/images/9.png'),  //require('../assets/images/9.png'),
   },
 ];
