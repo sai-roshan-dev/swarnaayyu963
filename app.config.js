@@ -4,7 +4,7 @@ export default {
   owner: "balaji_naga",
   expo: {
     name: "Aayu",
-    slug: "Aayu",
+    slug: "aayu",
     version: "1.0.0",
     orientation: "portrait",
     scheme: "Aayu",
@@ -51,7 +51,7 @@ export default {
       XI_AGENT_ID: process.env.XI_AGENT_ID,
       XI_API_KEY: process.env.XI_API_KEY,
       eas: {
-        "projectId": "1152ab6c-d0d5-4b1d-8982-316b69947a04"
+        "projectId": "b39fdd3e-b149-4800-94c2-873565463607"
       }
     }
   }

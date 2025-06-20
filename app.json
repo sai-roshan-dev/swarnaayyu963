@@ -1,10 +1,10 @@
 {
   "expo": {
     "name": "Aayu",
-    "slug": "voice-test",
+    "slug": "aayu",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "swarnaayu",
+    "scheme": "Aayu",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {

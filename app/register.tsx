@@ -17,7 +17,7 @@ import PhoneInput from '@/components/FormPhoneInput';
 import RNPickerSelect from 'react-native-picker-select';
 import countryList from '../utils/countryList';
 
-export default function GetStartedScreen() {
+export default function RegisterScreen() {
   const { mutate, isPending } = useAuthMutation('register');
   const { control, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
