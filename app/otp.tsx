@@ -91,8 +91,8 @@ export default  function OtpScreen() {
           ]);
           
           console.log('Navigation to main screen...');
-          // Navigate to the explore tab
-          router.replace('/(tabs)/explore');
+          // Navigate to the main app index
+          router.replace('/(app)');
         } catch (error) {
           console.error('Error storing data:', error);
           Alert.alert('Error', 'Failed to complete login process');

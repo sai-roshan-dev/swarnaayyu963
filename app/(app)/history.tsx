@@ -32,19 +32,9 @@ const ChatScreen = () => {
   const { data: chatMessages, isLoading } = useMessages();
   const { mutate: addMessage } = useAddChatMessage();
 
-  const scrollToBottom = () => {
-    if (flatListRef.current) {
-      flatListRef.current.scrollToEnd({ animated: true });
-    }
-  };
-
   useEffect(() => {
     if (!Array.isArray(chatMessages)) return;
-  
-    const totalMessages = chatMessages.length || 0;
-    const totalToShow = page * MESSAGES_PER_PAGE;
-  
-    // Filter out invalid messages first
+
     const validMessages = chatMessages.filter(msg => 
       msg && 
       msg.user_message && 
@@ -52,24 +42,25 @@ const ChatScreen = () => {
       msg.user_message !== "undefined" && 
       msg.bot_response !== "undefined"
     );
-  
+
     const sorted = [...validMessages].sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
-  
+      
+    const totalToShow = page * MESSAGES_PER_PAGE;
     const sliced = sorted.slice(0, totalToShow);
-  
+
     const optimisticMessages = chatMessages.filter((msg) =>
       msg.bot_response === "Typing..."
     );
-  
+
     const merged = [
       ...sliced,
       ...optimisticMessages.filter(
         (om) => !sliced.some((m) => m.timestamp === om.timestamp)
       ),
     ];
-  
+
     setDisplayedMessages(merged);
     setIsLoadingMore(false);
   }, [chatMessages, page]);
@@ -81,7 +72,6 @@ const ChatScreen = () => {
   };
 
   const renderMessage = ({ item }: { item: MessageType }) => {
-    // Skip rendering if either message is empty or invalid
     if (!item.user_message || !item.bot_response || 
         item.user_message === "undefined" || item.bot_response === "undefined") {
       return null;
@@ -113,31 +103,29 @@ const ChatScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-    >
-      <View style={styles.container}>
-        {isLoadingMore && <ActivityIndicator size="large" style={{ marginVertical: 8 }} />}
-
-        <View style={styles.content}>
-          <FlatList
-            ref={flatListRef}
-            data={displayedMessages}
-            keyExtractor={(item, index) => `${item.timestamp}-${index}`}
-            renderItem={renderMessage}
-            inverted
-            contentContainerStyle={styles.messagesList}
-            onEndReached={() => {
-              if (chatMessages && page * MESSAGES_PER_PAGE < chatMessages.length) {
-                setPage((prev) => prev + 1);
-                setIsLoadingMore(true);
-              }
-            }}
-            onEndReachedThreshold={0.1}
-          />
-        </View>
+    <View style={styles.container}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+        <FlatList
+          ref={flatListRef}
+          data={displayedMessages}
+          keyExtractor={(item, index) => `${item.timestamp}-${index}`}
+          renderItem={renderMessage}
+          inverted
+          contentContainerStyle={styles.messagesList}
+          onEndReached={() => {
+            if (chatMessages && page * MESSAGES_PER_PAGE < chatMessages.length) {
+              setPage(prev => prev + 1);
+              setIsLoadingMore(true);
+            }
+          }}
+          onEndReachedThreshold={0.1}
+          ListHeaderComponent={
+            isLoadingMore ? <ActivityIndicator size="large" style={{ marginVertical: 8 }} /> : null
+          }
+        />
 
         <View style={styles.inputWrapper}>
           <View style={styles.inputContainer}>
@@ -151,20 +139,18 @@ const ChatScreen = () => {
             <TouchableOpacity
               style={styles.sendButton}
               onPress={handleSend}
-              disabled={newMessage.trim() === ''}
-            >
+              disabled={newMessage.trim() === ''}>
               <Ionicons name="send" size={18} color="white" />
             </TouchableOpacity>
           </View>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f0f0f0' },
-  content: { flex: 1, marginBottom: 60 },
   messagesList: { paddingHorizontal: 15, paddingBottom: 10 },
   messageContainer: { marginVertical: 2, flexDirection: 'row' },
   myMessageContainer: { justifyContent: 'flex-end' },

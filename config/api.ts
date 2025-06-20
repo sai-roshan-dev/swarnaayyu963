@@ -1,5 +1,5 @@
 // Base URL for API endpoints
-export const API_BASE_URL = 'https://7755-183-82-122-6.ngrok-free.app';
+export const API_BASE_URL = 'https://bot.swarnaayu.com';
 
 // API endpoints
 export const API_ENDPOINTS = {

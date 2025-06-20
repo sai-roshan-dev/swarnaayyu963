@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useIsFocused } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
+import { API_ENDPOINTS } from "@/config/api";
 
 // Types matching the API response
 type ConversationHistory = {
@@ -41,7 +42,7 @@ const fetchMessages = async (): Promise<ConversationHistory[]> => {
 
   try {
     const response = await axios.get<ConversationResponse>(
-      "https://7755-183-82-122-6.ngrok-free.app/conversation_history/",
+      API_ENDPOINTS.CONVERSATION_HISTORY,
       {
         headers: {
           Authorization: `Token ${token}`,
@@ -78,7 +79,7 @@ const postChatMessage = async (newChatMessage: string): Promise<ChatResponse> =>
   }
 
   const response = await axios.post<ChatResponse>(
-    "https://7755-183-82-122-6.ngrok-free.app/chat_mem0/",
+    API_ENDPOINTS.CHAT,
     {
       message: newChatMessage,
     },

@@ -65,7 +65,7 @@ export default function GetStartedScreen() {
         <InputField
           control={control}
           name="fullname"
-          label="Full Name"
+          label="Name"
           placeholder="Enter your name"
           rules={{ required: 'Name is required' }}
           labelStyle={styles.label}
