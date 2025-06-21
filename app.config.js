@@ -13,7 +13,7 @@ export default {
 
     splash: {
       image: "./assets/images/aayu.png",
-      resizeMode: "contain",
+      resizeMode: "cover",
       backgroundColor: "#000000",
     },
 

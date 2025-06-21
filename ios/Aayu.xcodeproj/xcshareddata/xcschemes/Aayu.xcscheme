@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "voicetest.app"
-               BlueprintName = "voicetest"
-               ReferencedContainer = "container:voicetest.xcodeproj">
+               BuildableName = "Aayu.app"
+               BlueprintName = "Aayu"
+               ReferencedContainer = "container:Aayu.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "voicetestTests.xctest"
-               BlueprintName = "voicetestTests"
-               ReferencedContainer = "container:voicetest.xcodeproj">
+               BuildableName = "AayuTests.xctest"
+               BlueprintName = "AayuTests"
+               ReferencedContainer = "container:Aayu.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "voicetest.app"
-            BlueprintName = "voicetest"
-            ReferencedContainer = "container:voicetest.xcodeproj">
+            BuildableName = "Aayu.app"
+            BlueprintName = "Aayu"
+            ReferencedContainer = "container:Aayu.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "voicetest.app"
-            BlueprintName = "voicetest"
-            ReferencedContainer = "container:voicetest.xcodeproj">
+            BuildableName = "Aayu.app"
+            BlueprintName = "Aayu"
+            ReferencedContainer = "container:Aayu.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
