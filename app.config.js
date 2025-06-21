@@ -14,7 +14,7 @@ export default {
     splash: {
       image: "./assets/images/aayu.png",
       resizeMode: "cover",
-      backgroundColor: "#000000",
+      backgroundColor: "#ffffff",
     },
 
     ios: {
