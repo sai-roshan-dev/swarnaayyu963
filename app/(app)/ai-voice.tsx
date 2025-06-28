@@ -53,8 +53,8 @@ export default function AiVoice() {
       // Get signed URL from ElevenLabs
       const signedUrl = await getSignedUrl();
       
-      // Start the conversation session
-      await conversation.startSession({
+      // Start the conversation session and capture the conversationId
+      const conversationId = await conversation.startSession({
         signedUrl,
         onConnect: () => {
           console.log('Session connected');
@@ -72,6 +72,10 @@ export default function AiVoice() {
           setIsLoading(false);
         },
       });
+
+      // Log the conversationId to test if you receive it
+      console.log('📌 ElevenLabs conversation_id:', conversationId);
+
     } catch (error) {
       console.error('Failed to start conversation:', error);
       setStatus('idle');
