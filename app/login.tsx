@@ -38,10 +38,22 @@ export default function LoginScreen() {
       onError: (error: any) => {
         console.log(error.response.data, 'checking login')
         if(!error.response.data.exists){
-          Alert.alert('Login Alert', `${error.response.data.message}`, [
-            { text: 'OK', style: 'cancel' },
-          ]);
-          router.push({ pathname: '/register', params: { phoneNumber: fullPhone } });
+          Alert.alert(
+            'Account not Exists',
+            'Press proceed to register',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+              },
+              {
+                text: 'Proceed',
+                onPress: () => {
+                  router.push({ pathname: '/register', params: { phoneNumber: fullPhone } });
+                },
+              },
+            ]
+          );
         }else{
           Alert.alert('Login Alert', `Something went wrong!!`, [
             { text: 'OK', style: 'cancel' },

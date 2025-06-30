@@ -15,6 +15,7 @@ import InputField from '@/components/FormInput';
 import { Controller, useForm } from 'react-hook-form';
 import PhoneInput from '@/components/FormPhoneInput';
 import { Picker } from '@react-native-picker/picker';
+import axios from 'axios';
 
 const staticCountryList = [
   { label: 'India', value: 'India' },
@@ -53,18 +54,30 @@ export default function RegisterScreen() {
 
   const router = useRouter();
 
-  const handleRegister = (data: any) => {
-    mutate(data, {
-      onSuccess: (data) => {
-        Alert.alert('Registration Successful', `${data.message}`, [
-          { text: 'OK', style: 'cancel' },
+  const handleRegister = (formData: any) => {
+    const fullPhone = '91' + formData.phoneNumber;
+    mutate(formData, {
+      onSuccess: (response) => {
+        Alert.alert('Registration Successful', `${response.message}`, [
+          {
+            text: 'OK',
+            onPress: async () => {
+              try {
+                await axios.post('https://bot.swarnaayu.com/auth/login/', {
+                  phone_number: `+${fullPhone}`
+                });
+              } catch (err) {
+                Alert.alert('Notice', 'OTP may not have been sent automatically. Please try logging in if you do not receive an OTP.');
+              }
+              router.push({ pathname: '/otp', params: { phoneNumber: fullPhone } });
+            }
+          }
         ]);
-        router.push({ pathname: '/login', params: { phoneNumber: '' } });
       },
       onError: (error: any) => {
         console.error("Error:", error.response.data)
         if(!error.response.data.exists){
-          Alert.alert(error.response.data.message)
+          Alert.alert("Account Already Exits")
         }else{
           Alert.alert("Something went wrong!!")
         }
