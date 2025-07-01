@@ -27,18 +27,14 @@ export default function RootLayoutNav() {
   useEffect(() => {
     const prepare = async () => {
       await SplashScreen.preventAutoHideAsync();
-      router.replace('/on-boarding');
-
-      if (loaded) {
-        await SplashScreen.hideAsync();
-        if (!isAuthenticated) {
-          router.replace('/login');
-        } else {
-          router.replace('/on-boarding');
-        }
+      if (!loaded) return;
+      if (!isAuthenticated) {
+        router.replace('/on-boarding');
+      } else {
+        router.replace('/');
       }
+      await SplashScreen.hideAsync();
     };
-
     prepare();
   }, [loaded, isAuthenticated]);
 

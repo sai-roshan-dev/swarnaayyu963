@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -52,10 +52,12 @@ export default function RegisterScreen() {
     }
   });
 
+  const [accountExists, setAccountExists] = useState(false);
   const router = useRouter();
 
   const handleRegister = (formData: any) => {
     const fullPhone = '91' + formData.phoneNumber;
+    setAccountExists(false);
     mutate(formData, {
       onSuccess: (response) => {
         Alert.alert('Registration Successful', `${response.message}`, [
@@ -77,7 +79,7 @@ export default function RegisterScreen() {
       onError: (error: any) => {
         console.error("Error:", error.response.data)
         if(!error.response.data.exists){
-          Alert.alert("Account Already Exits")
+          setAccountExists(true);
         }else{
           Alert.alert("Something went wrong!!")
         }
@@ -179,6 +181,17 @@ export default function RegisterScreen() {
           label="WhatsApp Number"
         />
 
+        {/* Inline error message for account exists */}
+        {accountExists && (
+          <Text style={{ color: 'red', textAlign: 'center', marginBottom: 10 }}>
+            Account Already Exists. Continue to <Text
+            style={{ color: 'red', fontWeight: 'bold' }}
+            onPress={() => router.push('/login')}
+          >
+            Login
+          </Text>
+          </Text>
+        )}
         <TouchableOpacity 
           style={[styles.button, isPending && styles.buttonDisabled]} 
           onPress={handleSubmit(handleRegister)}
@@ -188,7 +201,7 @@ export default function RegisterScreen() {
         </TouchableOpacity>
 
         <Text style={styles.loginText} onPress={redirectLogin}>
-          Already have an account? <Text style={styles.loginLink}>Login</Text>
+          Already have an account? <Text style={styles.loginLink}><Text style={{fontWeight: 'bold'}}>Login</Text></Text>
         </Text>
       </View>
     </ScrollView>

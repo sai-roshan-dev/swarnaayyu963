@@ -8,7 +8,8 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  StyleSheet
+  StyleSheet,
+  Animated
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAddChatMessage, useMessages } from '@/hooks/useChatMessages';
@@ -18,9 +19,55 @@ type MessageType = {
   user_message: string;
   bot_response: string;
   timestamp: string;
+  channel: string;
+  mode: string;
+  audio_url: string | null;
 };
 
 const MESSAGES_PER_PAGE = 20;
+
+// WhatsApp-like animated typing dots component
+const TypingDots = () => {
+  const dot1 = useRef(new Animated.Value(0.3)).current;
+  const dot2 = useRef(new Animated.Value(0.3)).current;
+  const dot3 = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    const animate = () => {
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(dot1, { toValue: 1, duration: 300, useNativeDriver: true }),
+          Animated.timing(dot2, { toValue: 0.3, duration: 300, useNativeDriver: true }),
+          Animated.timing(dot3, { toValue: 0.3, duration: 300, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(dot1, { toValue: 0.3, duration: 300, useNativeDriver: true }),
+          Animated.timing(dot2, { toValue: 1, duration: 300, useNativeDriver: true }),
+          Animated.timing(dot3, { toValue: 0.3, duration: 300, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(dot1, { toValue: 0.3, duration: 300, useNativeDriver: true }),
+          Animated.timing(dot2, { toValue: 0.3, duration: 300, useNativeDriver: true }),
+          Animated.timing(dot3, { toValue: 1, duration: 300, useNativeDriver: true }),
+        ]),
+      ]).start(() => animate());
+    };
+    animate();
+    return () => {
+      dot1.stopAnimation();
+      dot2.stopAnimation();
+      dot3.stopAnimation();
+    };
+  }, [dot1, dot2, dot3]);
+
+  return (
+    <View style={styles.dotsContainer}>
+      <Animated.View style={[styles.dot, { opacity: dot1 }]} />
+      <Animated.View style={[styles.dot, { opacity: dot2, marginHorizontal: 4 }]} />
+      <Animated.View style={[styles.dot, { opacity: dot3 }]} />
+    </View>
+  );
+};
 
 const ChatScreen = () => {
   const [newMessage, setNewMessage] = useState('');
@@ -76,14 +123,21 @@ const ChatScreen = () => {
         item.user_message === "undefined" || item.bot_response === "undefined") {
       return null;
     }
-
     return (
       <View style={styles.messagePairContainer}>
         {/* User Message */}
         <View style={[styles.messageContainer, styles.myMessageContainer]}>
           <View style={[styles.messageBubble, styles.myMessageBubble]}>
-            <Text style={styles.messageText}>{item.user_message}</Text>
+            <View style={styles.messageHeader}>
+              
+              <Text style={styles.messageText}>{item.user_message}</Text>
+            </View>
             <Text style={[styles.timestamp, styles.myTimestamp]}>
+            <View style={[styles.whatsappicon]}>
+            {item.channel === 'whatsapp' && (
+                <Ionicons name="logo-whatsapp" size={16} color="#0b7d37" style={styles.channelIcon} />
+              )}
+              </View>
               {formatChatTimestamp(item.timestamp)}
             </Text>
           </View>
@@ -92,9 +146,21 @@ const ChatScreen = () => {
         {/* Bot Response */}
         <View style={[styles.messageContainer, styles.otherMessageContainer]}>
           <View style={[styles.messageBubble, styles.otherMessageBubble]}>
-            <Text style={styles.messageText}>{item.bot_response}</Text>
+            <View style={styles.messageHeader}>
+              {item.bot_response === "Typing..." ? (
+                <TypingDots />
+              ) : (
+                <Text style={styles.messageText}>{item.bot_response}</Text>
+              )}
+            </View>
             <Text style={[styles.timestamp, styles.otherTimestamp]}>
+              <View style={[styles.whatsappicon]}>
+            {item.channel === 'whatsapp' && (
+                <Ionicons name="logo-whatsapp" size={16} color="#0b7d37" style={styles.channelIcon} />
+              )}
+              </View>
               {formatChatTimestamp(item.timestamp)}
+
             </Text>
           </View>
         </View>
@@ -124,6 +190,12 @@ const ChatScreen = () => {
           onEndReachedThreshold={0.1}
           ListHeaderComponent={
             isLoadingMore ? <ActivityIndicator size="large" style={{ marginVertical: 8 }} /> : null
+          }
+          
+          ListFooterComponent={
+            displayedMessages.length > 0 && displayedMessages[0].bot_response === "Typing..." ? (
+              <TypingDots />
+            ) : null
           }
         />
 
@@ -160,6 +232,10 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 20,
     marginVertical: 2,
+  },
+  whatsappicon:{
+    marginTop:6.7,
+    
   },
   myMessageBubble: {
     backgroundColor: '#73a0ff',
@@ -203,6 +279,38 @@ const styles = StyleSheet.create({
   },
   messagePairContainer: {
     marginVertical: 8,
+  },
+  messageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  channelIcon: {
+    marginRight: 6,
+  },
+  
+  typingContainer: {
+    padding: 10,
+    alignItems: 'flex-start',
+    marginLeft: 10,
+  },
+  typingText: {
+    fontSize: 16,
+    fontStyle: 'italic',
+    color: '#555',
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 20,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#888',
   },
 });
 

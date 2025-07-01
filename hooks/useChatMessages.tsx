@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import { useIsFocused } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
 import { API_ENDPOINTS } from "@/config/api";
@@ -9,6 +9,9 @@ type ConversationHistory = {
   user_message: string;
   bot_response: string;
   timestamp: string;
+  channel: string;
+  mode: string;
+  audio_url: string | null;
 };
 
 type UserInfo = {
@@ -40,18 +43,23 @@ const fetchMessages = async (): Promise<ConversationHistory[]> => {
     return []; // Return empty array if no token
   }
 
+  let allMessages: ConversationHistory[] = [];
+  let nextUrl: string | null = API_ENDPOINTS.CONVERSATION_HISTORY;
+
   try {
-    const response = await axios.get<ConversationResponse>(
-      API_ENDPOINTS.CONVERSATION_HISTORY,
+    while (nextUrl) {
+      const response: AxiosResponse<ConversationResponse> = await axios.get<ConversationResponse>(
+        nextUrl,
       {
         headers: {
           Authorization: `Token ${token}`,
         },
       }
     );
-
-    // Return the conversation history array
-    return response.data.results.conversation_history || [];
+      allMessages = allMessages.concat(response.data.results.conversation_history || []);
+      nextUrl = response.data.next;
+    }
+    return allMessages;
   } catch (error) {
     console.error('Error fetching messages:', error);
     return []; // Return empty array on error
@@ -110,6 +118,9 @@ export function useAddChatMessage() {
         user_message: newMessage,
         bot_response: "Typing...",
         timestamp: new Date().toISOString(),
+        channel: "",
+        mode: "",
+        audio_url: null,
       };
 
       queryClient.setQueryData<ConversationHistory[]>(["messages"], (old = []) => [
@@ -126,13 +137,16 @@ export function useAddChatMessage() {
       }
     },
 
-    onSuccess: (savedMessage) => {
+    onSuccess: (savedMessage, variables) => {
       queryClient.setQueryData<ConversationHistory[]>(["messages"], (old = []) => {
         const withoutTemp = old.filter((msg) => msg.bot_response !== "Typing...");
         return [...withoutTemp, {
-          user_message: savedMessage.phone_number, // This will be replaced by the actual user message
+          user_message: variables, // Use the original user message
           bot_response: savedMessage.response,
           timestamp: new Date().toISOString(),
+          channel: "",
+          mode: "",
+          audio_url: null,
         }];
       });
 

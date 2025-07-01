@@ -9,6 +9,7 @@ import {
   Dimensions,
   Image,
   TouchableOpacity,
+  Pressable,
 } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
@@ -43,11 +44,22 @@ const Onboarding = () => {
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
   
+  // Skip button handler
+  const handleSkip = async () => {
+    await SecureStore.setItemAsync('hasSeenOnboarding', 'true');
+    const token = await SecureStore.getItemAsync('isOtpVerified');
+    if (!token) {
+      router.replace('/login');
+    } else {
+      router.replace('/');
+    }
+  };
 
   const handleNext = async() => {
     if (currentIndex < slides.length - 1) {
       flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
     } else {
+      await SecureStore.setItemAsync('hasSeenOnboarding', 'true');
       const token = await SecureStore.getItemAsync('isOtpVerified');
       if (!token) {
         router.replace('/login');
@@ -65,6 +77,10 @@ const Onboarding = () => {
 
   return (
     <View style={styles.container}>
+      {/* Skip button in top right */}
+      <Pressable style={styles.skipButton} onPress={handleSkip}>
+        <Text style={styles.skipText}>Skip</Text>
+      </Pressable>
       <FlatList
         ref={flatListRef}
         data={slides}
@@ -160,6 +176,18 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontWeight: '600',
+    fontSize: 16,
+  },
+  skipButton: {
+    position: 'absolute',
+    top: 40,
+    right: 24,
+    zIndex: 10,
+    padding: 8,
+  },
+  skipText: {
+    color: '#007bff',
+    fontWeight: 'bold',
     fontSize: 16,
   },
 });

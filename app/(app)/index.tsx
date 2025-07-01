@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Platform, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity, Image, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AiVoice from './ai-voice';
@@ -16,6 +16,7 @@ export default function App() {
   const router = useRouter();
   const [user_name, setName] = useState<string>("")
   const [phone_number, setPhone] = useState<string>("")
+  const [status, setStatus] = useState<'idle'| 'connecting' | 'listening' | 'mic-off' | 'speaking'>('idle');
   useBackExit();
   const [permissionStatus, setPermissionStatus] = useState<'undetermined' | 'granted' | 'denied'>('undetermined');
 
@@ -43,7 +44,13 @@ export default function App() {
   return (
     <View style={styles.container}>
       <GradientBackground />
-      
+      {/* Status in top right corner */}
+      <View style={styles.statusContainer}>
+        <Text style={styles.statusText}>
+          {status === 'speaking' && 'Speaking'}
+          {status === 'listening' && 'Listening'}
+        </Text>
+      </View>
       {/* Clock Icon */}
      
 
@@ -58,6 +65,8 @@ export default function App() {
           get_battery_level={tools.get_battery_level}
           change_brightness={tools.change_brightness}
           flash_screen={tools.flash_screen}
+          status={status}
+          setStatus={setStatus}
         />
       </View>
 
@@ -113,5 +122,20 @@ const styles = StyleSheet.create({
   domComponent: {
     width: 600,
     height: 500,
+  },
+  statusContainer: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 2,
+    
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
+  statusText: {
+    fontWeight: 'bold',
+    color: '#007BFF',
+    fontSize: 16,
   },
 });

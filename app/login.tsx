@@ -22,48 +22,30 @@ export default function LoginScreen() {
   const { mutate, isPending } = useAuthMutation('login');
   const { control, handleSubmit, formState: { errors } } = useForm();
 
+  const [accountNotFound, setAccountNotFound] = useState(false);
 
   useBackExit();
 
   const handleLogin = (data: any) => {
-
     const {name, phoneNumber } = data;
     const fullPhone = '91' + phoneNumber;
     SecureStore.setItemAsync('loginType', 'login');
-
-     mutate(data,{
+    setAccountNotFound(false);
+    mutate(data,{
       onSuccess: (data) => {
-       router.push({ pathname: '/otp', params: { phoneNumber: fullPhone } });
+        router.push({ pathname: '/otp', params: { phoneNumber: fullPhone } });
       },
       onError: (error: any) => {
         console.log(error.response.data, 'checking login')
         if(!error.response.data.exists){
-          Alert.alert(
-            'Account not Exists',
-            'Press proceed to register',
-            [
-              {
-                text: 'Cancel',
-                style: 'cancel',
-              },
-              {
-                text: 'Proceed',
-                onPress: () => {
-                  router.push({ pathname: '/register', params: { phoneNumber: fullPhone } });
-                },
-              },
-            ]
-          );
+          setAccountNotFound(true);
         }else{
           Alert.alert('Login Alert', `Something went wrong!!`, [
             { text: 'OK', style: 'cancel' },
           ]);
         }
       }
-        ,
     })
-   
-    
   };
 
   return (
@@ -71,11 +53,52 @@ export default function LoginScreen() {
       <Text style={styles.title} >Welcome Back!</Text>
       <Text style={styles.subtitle}>Log in to continue your journey with <Text style={{fontWeight: 'bold'}}>Aayu</Text>.</Text>
 
-      <PhoneInput
+      <Controller
         control={control}
         name="phoneNumber"
-        label="WhatsApp Number"
+        rules={{
+          required: 'Phone number is required',
+          minLength: { value: 10, message: 'Phone number must be at least 10 digits' },
+        }}
+        render={({ field: { onChange, value }, fieldState: { error } }) => (
+          <>
+            <Text style={[styles.label, { marginTop: hp('2%') }]}>WhatsApp Number <Text style={styles.required}>*</Text></Text>
+            <View style={[styles.phoneContainer, error && styles.inputError]}>
+              <Text style={styles.countryCode}>+91</Text>
+              <TextInput
+                style={styles.phoneInput}
+                placeholder="Enter your phone number"
+                placeholderTextColor="#999"
+                keyboardType="phone-pad"
+                maxLength={10}
+                onChangeText={text => {
+                  setAccountNotFound(false);
+                  onChange(text);
+                }}
+                value={value}
+              />
+            </View>
+            {error?.message && <Text style={styles.errorText}>{error.message}</Text>}
+          </>
+        )}
       />
+
+      {/* Error messages: Only show one at a time */}
+      {errors.phoneNumber ? (
+        <Text style={{ color: 'red', textAlign: 'center', marginBottom: 0 }}>
+        </Text>
+      ) : accountNotFound ? (
+        <Text style={{ color: 'red', textAlign: 'left', marginBottom: 10 }}>
+          Account does not found. Continue to{' '}
+          <Text
+            style={{ color: 'red', fontWeight: 'bold' }}
+            onPress={() => router.push('/register')}
+          >
+            Register
+          </Text>
+          .
+        </Text>
+      ) : null}
 
       <TouchableOpacity style={styles.button} onPress={handleSubmit(handleLogin)}>
         <Text style={styles.buttonText}>Login</Text>
@@ -87,7 +110,7 @@ export default function LoginScreen() {
           style={styles.link}
           onPress={() => router.push('/register')}
         >
-          Join us now!
+          <Text style={{fontWeight: 'bold'}}>Register</Text>
         </Text>
       </Text>
     </View>
@@ -175,8 +198,8 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: 'red',
-    marginBottom: 12,
-    fontSize: 13,
+    marginBottom: 0,
+    fontSize: 15,
   },
   button: {
     backgroundColor: '#007BFF',
@@ -200,6 +223,8 @@ const styles = StyleSheet.create({
     color: '#007BFF',
     fontWeight: '500',
   },
-
-
+  required: {
+    color: 'red',
+    fontWeight: 'bold',
+  },
 });

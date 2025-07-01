@@ -1,7 +1,7 @@
 'use dom';
 
 import { useConversation } from '@11labs/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 
 
@@ -24,6 +24,8 @@ export default function ConvAiDOMComponent({
   get_battery_level,
   change_brightness,
   flash_screen,
+  status,
+  setStatus,
 }: {
   dom?: import('expo/dom').DOMProps;
   platform: string;
@@ -34,10 +36,9 @@ export default function ConvAiDOMComponent({
   get_battery_level: typeof tools.get_battery_level;
   change_brightness: typeof tools.change_brightness;
   flash_screen: typeof tools.flash_screen;
+  status: 'idle'| 'connecting' | 'listening' | 'mic-off' | 'speaking';
+  setStatus: (s: 'idle'| 'connecting' | 'listening' | 'mic-off' | 'speaking') => void;
 }) {
-  const [status, setStatus] = useState<'idle'| 'connecting' | 'listening' | 'mic-off' | 'speaking'>('idle');
-  
-
   const conversation = useConversation({
     onConnect: () => {
       console.log('Connected')

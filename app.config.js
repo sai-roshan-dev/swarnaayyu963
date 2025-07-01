@@ -11,6 +11,8 @@ export default {
     userInterfaceStyle: "automatic",
     newArchEnabled: false,
 
+    icon: "./assets/images/image.png",
+
     splash: {
       image: "./assets/images/aayu.png",
       resizeMode: "cover",
@@ -51,7 +53,7 @@ export default {
       XI_AGENT_ID: process.env.XI_AGENT_ID,
       XI_API_KEY: process.env.XI_API_KEY,
       eas: {
-        "projectId": "0fede8c7-60c5-4295-ba80-28c56b5d311b"
+            "projectId": "0fede8c7-60c5-4295-ba80-28c56b5d311b"
       }
     }
   }
