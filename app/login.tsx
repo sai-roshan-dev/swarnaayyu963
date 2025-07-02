@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import * as SecureStore from 'expo-secure-store';
@@ -91,7 +91,7 @@ export default function LoginScreen() {
         <Text style={{ color: 'red', textAlign: 'left', marginBottom: 10 }}>
           Account does not found. Continue to{' '}
           <Text
-            style={{ color: 'red', fontWeight: 'bold' }}
+            style={{ color: 'red', fontWeight: 'bold' ,textDecorationLine: 'underline' }}
             onPress={() => router.push('/register')}
           >
             Register
@@ -100,8 +100,16 @@ export default function LoginScreen() {
         </Text>
       ) : null}
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit(handleLogin)}>
-        <Text style={styles.buttonText}>Login</Text>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleSubmit(handleLogin)}
+        disabled={isPending}
+      >
+        {isPending ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Login</Text>
+        )}
       </TouchableOpacity>
 
       <Text style={styles.bottomText}>

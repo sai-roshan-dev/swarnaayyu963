@@ -1,7 +1,7 @@
 'use dom';
 
 import { useConversation } from '@11labs/react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 
 
@@ -11,6 +11,7 @@ import Constants from 'expo-constants';
 import VoiceBubble from './VoiceBubble';
 import VoiceActions from './VoiceActions';
 import { getSignedUrl } from '@/utils/api';
+import { useAuthMutation } from "../hooks/useAuthMutation";
 
 const { XI_AGENT_ID, XI_API_KEY } = Constants.expoConfig?.extra || {};
 
@@ -39,6 +40,22 @@ export default function ConvAiDOMComponent({
   status: 'idle'| 'connecting' | 'listening' | 'mic-off' | 'speaking';
   setStatus: (s: 'idle'| 'connecting' | 'listening' | 'mic-off' | 'speaking') => void;
 }) {
+  const speakingTimeout = useRef<NodeJS.Timeout | null>(null);
+  const { mutate: resendOtp, isPending: isResending } = useAuthMutation('login');
+
+  const handleMessage = (message: any) => {
+    if (message.source === 'ai') {
+      setStatus('speaking');
+      if (speakingTimeout.current) clearTimeout(speakingTimeout.current);
+      speakingTimeout.current = setTimeout(() => {
+        setStatus('listening');
+      }, 3000); // 3 seconds, adjust as needed
+    } else if (message.source === 'user') {
+      setStatus('listening');
+      if (speakingTimeout.current) clearTimeout(speakingTimeout.current);
+    }
+  };
+
   const conversation = useConversation({
     onConnect: () => {
       console.log('Connected')
@@ -47,24 +64,16 @@ export default function ConvAiDOMComponent({
     },
     onDisconnect: () => {
       setStatus('idle');
-      console.log('Disconnected')
+      if (speakingTimeout.current) clearTimeout(speakingTimeout.current);
+      console.log('Disconnected - session ended, status set to idle');
     },
-    onMessage: (message) => {
-      if(message.source === 'ai'){
-        console.log(message, 'test ai message');
-        setStatus('speaking');
-      }else if(message.source === 'user'){
-        console.log(message, 'test user message');
-        setStatus('listening');
-      }
-    },
-   
-    
+    onMessage: handleMessage,
     onError: (error) => {
       setStatus('idle');
       console.error('Error:', error)
     },
   });
+
   const startConversation = useCallback(async () => {
     try {
       //Madhava
@@ -96,6 +105,8 @@ export default function ConvAiDOMComponent({
   const stopConversation = useCallback(async () => {
     await conversation.endSession();
   }, [conversation]);
+
+
 
   return (
     <View style={styles.container}>

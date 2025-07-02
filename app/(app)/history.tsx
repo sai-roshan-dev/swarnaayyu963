@@ -153,15 +153,16 @@ const ChatScreen = () => {
                 <Text style={styles.messageText}>{item.bot_response}</Text>
               )}
             </View>
-            <Text style={[styles.timestamp, styles.otherTimestamp]}>
-              <View style={[styles.whatsappicon]}>
-            {item.channel === 'whatsapp' && (
-                <Ionicons name="logo-whatsapp" size={16} color="#0b7d37" style={styles.channelIcon} />
-              )}
-              </View>
-              {formatChatTimestamp(item.timestamp)}
-
-            </Text>
+            {item.bot_response !== "Typing..." && (
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+        {item.channel === 'whatsapp' && (
+          <Ionicons name="logo-whatsapp" size={16} color="#0b7d37" style={{ marginRight: 4, marginBottom: -2 }} />
+        )}
+        <Text style={[styles.timestamp, styles.otherTimestamp]}>
+          {formatChatTimestamp(item.timestamp)}
+        </Text>
+      </View>
+    )}
           </View>
         </View>
       </View>

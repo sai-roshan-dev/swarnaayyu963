@@ -13,6 +13,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useOTPAuthMutation } from '@/hooks/useAuthMutation';
+import { useAuthMutation } from '../hooks/useAuthMutation';
 
 
 export default  function OtpScreen() {
@@ -21,6 +22,7 @@ export default  function OtpScreen() {
   const { phoneNumber } = useLocalSearchParams();
   const router = useRouter();
   const { mutate } = useOTPAuthMutation('login')
+  const { mutate: resendOtp, isPending: isResending } = useAuthMutation('login');
 
   const [loginType, setLoginTypeUse] = useState(''); 
 
@@ -35,6 +37,10 @@ export default  function OtpScreen() {
     setLoginType();
   },[])
 
+  // Make sure you have the phone number available as fullPhone
+  const fullPhone = phoneNumber?.toString().startsWith('+91')
+    ? phoneNumber
+    : `+91${phoneNumber}`;
 
   const handleChange = (text: string, index: number) => {
     if (/^\d$/.test(text)) {
@@ -109,6 +115,28 @@ export default  function OtpScreen() {
     })
   };
 
+  // Helper to extract 10-digit number
+  const getRawPhoneNumber = (phone: string) => {
+    // Remove any leading + or country code
+    return phone.replace(/^\+?91/, '');
+  };
+
+  const handleResendOtp = () => {
+    const phone = Array.isArray(phoneNumber) ? phoneNumber[0] : phoneNumber;
+    const rawPhone = getRawPhoneNumber(phone); // phoneNumber from params
+    resendOtp(
+      { phoneNumber: rawPhone },
+      {
+        onSuccess: () => {
+          Alert.alert('OTP resent!', 'A new OTP has been sent to your phone.');
+        },
+        onError: () => {
+          Alert.alert('Error', 'Failed to resend OTP. Please try again.');
+        },
+      }
+    );
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Enter OTP Code</Text>
@@ -145,7 +173,12 @@ export default  function OtpScreen() {
 
       <Text style={styles.resendText}>
         Didn't receive the code?{' '}
-        <Text style={styles.resendLink}>Resend code</Text>
+        <Text
+          style={styles.resendLink}
+          onPress={isResending ? undefined : handleResendOtp}
+        >
+          {isResending ? 'Resending...' : 'Resend code'}
+        </Text>
       </Text>
     </View>
   );

@@ -185,7 +185,7 @@ export default function RegisterScreen() {
         {accountExists && (
           <Text style={{ color: 'red', textAlign: 'center', marginBottom: 10 }}>
             Account Already Exists. Continue to <Text
-            style={{ color: 'red', fontWeight: 'bold' }}
+            style={{ color: 'red', fontWeight: 'bold', textDecorationLine: 'underline' }}
             onPress={() => router.push('/login')}
           >
             Login
