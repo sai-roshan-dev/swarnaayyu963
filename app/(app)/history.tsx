@@ -14,6 +14,8 @@ import {
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAddChatMessage, useMessages } from '@/hooks/useChatMessages';
 import { formatChatTimestamp } from '@/components/utilities/timestampfomat';
+import { Audio } from 'expo-av';
+import Slider from '@react-native-community/slider';
 
 type MessageType = {
   user_message: string;
@@ -82,12 +84,18 @@ const ChatScreen = () => {
   useEffect(() => {
     if (!Array.isArray(chatMessages)) return;
 
-    const validMessages = chatMessages.filter(msg => 
-      msg && 
-      msg.user_message && 
-      msg.bot_response && 
-      msg.user_message !== "undefined" && 
-      msg.bot_response !== "undefined"
+    const validMessages = chatMessages.filter(msg =>
+      msg &&
+      (
+        (
+          msg.user_message &&
+          msg.bot_response &&
+          msg.user_message !== "undefined" &&
+          msg.bot_response !== "undefined"
+        )
+        ||
+        msg.audio_url // include audio-only messages
+      )
     );
 
     const sorted = [...validMessages].sort(
@@ -119,24 +127,24 @@ const ChatScreen = () => {
   };
 
   const renderMessage = ({ item }: { item: MessageType }) => {
-    if (!item.user_message || !item.bot_response || 
-        item.user_message === "undefined" || item.bot_response === "undefined") {
-      return null;
-    }
+    if (!item.user_message && !item.audio_url) return null;
     return (
       <View style={styles.messagePairContainer}>
-        {/* User Message */}
+        {/* User Message or Audio */}
         <View style={[styles.messageContainer, styles.myMessageContainer]}>
           <View style={[styles.messageBubble, styles.myMessageBubble]}>
             <View style={styles.messageHeader}>
-              
-              <Text style={styles.messageText}>{item.user_message}</Text>
+              {item.audio_url ? (
+                <AudioPlayer url={item.audio_url} />
+              ) : (
+                <Text style={styles.messageText}>{item.user_message}</Text>
+              )}
             </View>
             <Text style={[styles.timestamp, styles.myTimestamp]}>
-            <View style={[styles.whatsappicon]}>
-            {item.channel === 'whatsapp' && (
-                <Ionicons name="logo-whatsapp" size={16} color="#0b7d37" style={styles.channelIcon} />
-              )}
+              <View style={[styles.whatsappicon]}>
+                {item.channel === 'whatsapp' && (
+                  <Ionicons name="logo-whatsapp" size={16} color="#0b7d37" style={styles.channelIcon} />
+                )}
               </View>
               {formatChatTimestamp(item.timestamp)}
             </Text>
@@ -144,30 +152,132 @@ const ChatScreen = () => {
         </View>
 
         {/* Bot Response */}
-        <View style={[styles.messageContainer, styles.otherMessageContainer]}>
-          <View style={[styles.messageBubble, styles.otherMessageBubble]}>
-            <View style={styles.messageHeader}>
-              {item.bot_response === "Typing..." ? (
-                <TypingDots />
-              ) : (
-                <Text style={styles.messageText}>{item.bot_response}</Text>
+        {item.bot_response && (
+          <View style={[styles.messageContainer, styles.otherMessageContainer]}>
+            <View style={[styles.messageBubble, styles.otherMessageBubble]}>
+              <View style={styles.messageHeader}>
+                {item.bot_response === "Typing..." ? (
+                  <TypingDots />
+                ) : (
+                  <Text style={styles.messageText}>{item.bot_response}</Text>
+                )}
+              </View>
+              {item.bot_response !== "Typing..." && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                  {item.channel === 'whatsapp' && (
+                    <Ionicons name="logo-whatsapp" size={16} color="#0b7d37" style={{ marginRight: 4, marginBottom: -2 }} />
+                  )}
+                  <Text style={[styles.timestamp, styles.otherTimestamp]}>
+                    {formatChatTimestamp(item.timestamp)}
+                  </Text>
+                </View>
               )}
             </View>
-            {item.bot_response !== "Typing..." && (
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-        {item.channel === 'whatsapp' && (
-          <Ionicons name="logo-whatsapp" size={16} color="#0b7d37" style={{ marginRight: 4, marginBottom: -2 }} />
-        )}
-        <Text style={[styles.timestamp, styles.otherTimestamp]}>
-          {formatChatTimestamp(item.timestamp)}
-        </Text>
-      </View>
-    )}
           </View>
+        )}
+      </View>
+    );
+  };
+
+  // AudioPlayer component for playing audio_url
+  const AudioPlayer = ({ url }: { url: string }) => {
+    const [sound, setSound] = useState<Audio.Sound | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [duration, setDuration] = useState(0);
+    const [position, setPosition] = useState(0);
+    const [isSeeking, setIsSeeking] = useState(false);
+    const [shouldPlayAfterSeek, setShouldPlayAfterSeek] = useState(false);
+
+    const loadSound = async () => {
+      if (sound) return;
+      const { sound: newSound, status } = await Audio.Sound.createAsync({ uri: url }, {}, onPlaybackStatusUpdate);
+      setSound(newSound);
+      if (status.isLoaded) {
+        setDuration(status.durationMillis || 0);
+        setPosition(status.positionMillis || 0);
+      }
+    };
+
+    const onPlaybackStatusUpdate = (status: any) => {
+      if (!status.isLoaded) return;
+      if (!isSeeking) setPosition(status.positionMillis);
+      setDuration(status.durationMillis);
+      setIsPlaying(status.isPlaying);
+    };
+
+    const togglePlayPause = async () => {
+      await loadSound();
+      const currentSound = sound;
+      if (!currentSound) return;
+
+      const status: any = await currentSound.getStatusAsync();
+      if (status.isLoaded && status.isPlaying) {
+        await currentSound.pauseAsync();
+      } else if (status.isLoaded) {
+        await currentSound.playAsync();
+      }
+    };
+
+    const onSeekSliderValueChange = (value: number) => {
+      setIsSeeking(true);
+      setPosition(value);
+    };
+
+    const onSeekSliderSlidingComplete = async (value: number) => {
+      if (sound) {
+        await sound.setPositionAsync(value);
+        setIsSeeking(false);
+        if (shouldPlayAfterSeek) {
+          await sound.playAsync();
+        }
+      }
+    };
+
+    useEffect(() => {
+      loadSound();
+      return () => {
+        if (sound) {
+          sound.unloadAsync();
+        }
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [url]);
+
+    return (
+      <View style={{ width: '100%' }}>
+        <TouchableOpacity onPress={togglePlayPause} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+          <Ionicons name={isPlaying ? 'pause' : 'play'} size={20} color="#007AFF" style={{ marginRight: 6 }} />
+          <Text style={{ color: '#007AFF', fontWeight: 'bold' }}>{isPlaying ? 'Pause' : 'Play Audio'}</Text>
+        </TouchableOpacity>
+        <Slider
+          style={{ width: '100%', height: 20 }}
+          minimumValue={0}
+          maximumValue={duration}
+          value={position}
+          onValueChange={onSeekSliderValueChange}
+          onSlidingStart={() => {
+            setShouldPlayAfterSeek(isPlaying);
+            if (isPlaying && sound) sound.pauseAsync();
+          }}
+          onSlidingComplete={onSeekSliderSlidingComplete}
+          minimumTrackTintColor="#007AFF"
+          maximumTrackTintColor="#ccc"
+          thumbTintColor="#007AFF"
+        />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Text style={{ fontSize: 10 }}>{formatMillis(position)}</Text>
+          <Text style={{ fontSize: 10 }}>{formatMillis(duration)}</Text>
         </View>
       </View>
     );
   };
+
+  function formatMillis(millis: number) {
+    const totalSeconds = Math.floor(millis / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
 
   return (
     <View style={styles.container}>
