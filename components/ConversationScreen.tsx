@@ -55,10 +55,10 @@ export default function ConversationScreen() {
 
     const conversation = await conversatio.startSession({
         signedUrl,
-        // dynamicVariables: {
-        //     user_name: userName,
-        //     letta_user_id: userId
-        // },
+        dynamicVariables: {
+            auth_token: 'Token b068249ed4b844bf9f64d93615529edf88bcbdba'
+            
+        },
         onConnect: () => {
             // setIsConnected(true)
             // setIsSpeaking(true)

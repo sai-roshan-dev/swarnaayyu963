@@ -53,7 +53,7 @@ export default {
       XI_AGENT_ID: process.env.XI_AGENT_ID,
       XI_API_KEY: process.env.XI_API_KEY,
       eas: {
-            "projectId": "21a8d2cb-6331-40c0-aa0e-cd2d4e9057d1"
+              "projectId": "ff87bad1-0c47-4288-a50a-58668e21f2cf"
       }
     }
   }
