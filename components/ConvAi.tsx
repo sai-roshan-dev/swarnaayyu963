@@ -1,8 +1,8 @@
 'use dom';
 
 import { useConversation } from '@11labs/react';
-import { useCallback, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Platform, Text } from 'react-native';
 
 
 import tools from '../utils/tools';
@@ -11,7 +11,6 @@ import Constants from 'expo-constants';
 import VoiceBubble from './VoiceBubble';
 import VoiceActions from './VoiceActions';
 import { getSignedUrl } from '@/utils/api';
-import { useAuthMutation } from "../hooks/useAuthMutation";
 
 const { XI_AGENT_ID, XI_API_KEY } = Constants.expoConfig?.extra || {};
 
@@ -41,7 +40,7 @@ export default function ConvAiDOMComponent({
   setStatus: (s: 'idle'| 'connecting' | 'listening' | 'mic-off' | 'speaking') => void;
 }) {
   const speakingTimeout = useRef<NodeJS.Timeout | null>(null);
-  const { mutate: resendOtp, isPending: isResending } = useAuthMutation('login');
+  const [error, setError] = useState<string | null>(null);
 
   const handleMessage = (message: any) => {
     if (message.source === 'ai') {
@@ -76,15 +75,12 @@ export default function ConvAiDOMComponent({
 
   const startConversation = useCallback(async () => {
     try {
-      //Madhava
-
-      // Start the conversation with your agent
+      setError(null);
       if(user_name && phone_number){
         setStatus('connecting');
         const signedUrl = await getSignedUrl();
         await conversation.startSession({
           signedUrl,
-          //agentId: `${XI_AGENT_ID}`, // Replace with your agent ID
           dynamicVariables: {
             user_name,
             phone_number
@@ -95,9 +91,12 @@ export default function ConvAiDOMComponent({
             flash_screen,
           },
         });
+      } else {
+        setError('User name or phone number is missing.');
       }
     } catch (error) {
       setStatus('idle');
+      setError('Failed to start conversation. Please try again.');
       console.error('Failed to start conversation:', error);
     }
   }, [conversation]);
@@ -110,6 +109,11 @@ export default function ConvAiDOMComponent({
 
   return (
     <View style={styles.container}>
+      {error && (
+        <View style={{ marginBottom: 20, padding: 10, backgroundColor: '#fee', borderRadius: 8 }}>
+          <Text style={{ color: '#b00', textAlign: 'center' }}>{error}</Text>
+        </View>
+      )}
       <View style={{ marginBottom: 50}}>
         <TouchableOpacity  onPress={conversation.status === 'disconnected' ? startConversation  : stopConversation} >
           <VoiceBubble status={status} />
