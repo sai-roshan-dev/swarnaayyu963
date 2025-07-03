@@ -77,6 +77,7 @@ const ChatScreen = () => {
   const [displayedMessages, setDisplayedMessages] = useState<MessageType[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const flatListRef = useRef<FlatList<MessageType>>(null);
+  const soundRef = useRef<Audio.Sound | null>(null);
 
   const { data: chatMessages, isLoading } = useMessages();
   const { mutate: addMessage } = useAddChatMessage();
@@ -192,6 +193,7 @@ const ChatScreen = () => {
       if (sound) return;
       const { sound: newSound, status } = await Audio.Sound.createAsync({ uri: url }, {}, onPlaybackStatusUpdate);
       setSound(newSound);
+      soundRef.current = newSound;
       if (status.isLoaded) {
         setDuration(status.durationMillis || 0);
         setPosition(status.positionMillis || 0);
@@ -236,8 +238,9 @@ const ChatScreen = () => {
     useEffect(() => {
       loadSound();
       return () => {
-        if (sound) {
-          sound.unloadAsync();
+        if (soundRef.current) {
+          soundRef.current.stopAsync();
+          soundRef.current.unloadAsync();
         }
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
