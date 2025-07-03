@@ -5,6 +5,7 @@ import { Audio } from 'expo-av';
 import { getSignedUrl } from '../utils/api';
 import { connectToAgent } from '../utils/ws'; // You'll write this manually
 import { useConversation } from '@11labs/react';
+import * as SecureStore from 'expo-secure-store';
 
 
 export default function ConversationScreen() {
@@ -33,7 +34,7 @@ export default function ConversationScreen() {
   }, []);
   
 
-  const startConversation = async () => {
+  const startConversatio = async () => {
     try {
       // Get signed URL from your backend or directly from ElevenLabs
       const signedUrl = await getSignedUrl();
@@ -54,10 +55,17 @@ export default function ConversationScreen() {
     //   });
 
     const conversation = await conversatio.startSession({
+      
+      // const token = await SecureStore.getItemAsync('token');
+      // if (!token) {
+      //   alert('No authentication token found. Please log in again.');
+      //   return;
+      // }
+      // const conversation = await conversatio.startSession({
         signedUrl,
         dynamicVariables: {
             auth_token: 'Token b068249ed4b844bf9f64d93615529edf88bcbdba'
-            
+          //auth_token: `Token ${token}`  
         },
         onConnect: () => {
             // setIsConnected(true)
@@ -66,7 +74,6 @@ export default function ConversationScreen() {
         },
         onDisconnect: () => {
             console.log('disconnected session')
-
             // setIsConnected(false)
             // setIsSpeaking(false)
         },
@@ -78,8 +85,7 @@ export default function ConversationScreen() {
         //     setIsSpeaking(mode === 'speaking')
         // },
     })
-
-    const ws = connectToAgent(signedUrl, async (fileUri: string) => {
+      const ws = connectToAgent(signedUrl, async (fileUri: string) => {
         console.log(fileUri, 'passed file uri')
         const sound = new Audio.Sound();
         await sound.loadAsync({ uri: fileUri });
@@ -102,6 +108,49 @@ export default function ConversationScreen() {
     }
   };
 
+
+  const startConversation = async () => {
+    try {
+      const signedUrl = await getSignedUrl();
+      const token = await SecureStore.getItemAsync('token');
+      if (!token) {
+        alert('No authentication token found. Please log in again.');
+        return;
+      }
+      const conversation = await conversatio.startSession({
+        signedUrl,
+        dynamicVariables: {
+          auth_token: `Token ${token}`
+        },
+        onConnect: () => console.log('connected session'),
+        onDisconnect: () => console.log('disconnected session'),
+        onError: (error) => {
+          console.log(error);
+          alert('An error occurred during the conversation');
+        },
+      });
+  
+      const ws = connectToAgent(signedUrl, async (fileUri: string) => {
+        const sound = new Audio.Sound();
+        await sound.loadAsync({ uri: fileUri });
+        await sound.playAsync();
+        soundRef.current = sound;
+        setIsSpeaking(true);
+  
+        sound.setOnPlaybackStatusUpdate((status) => {
+          if ('isPlaying' in status && !status.isPlaying) {
+            setIsSpeaking(false);
+          }
+        });
+      });
+  
+      socketRef.current = ws;
+      setIsConnected(true);
+    } catch (error) {
+      console.error('Failed to start conversation:', error);
+    }
+  };
+
   const endConversation = () => {
     if (socketRef.current) {
       socketRef.current.close();
@@ -109,6 +158,8 @@ export default function ConversationScreen() {
       setIsSpeaking(false);
     }
   };
+
+
 
   return (
     <View style={styles.container}>
