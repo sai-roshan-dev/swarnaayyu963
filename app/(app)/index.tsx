@@ -19,10 +19,12 @@ export default function App() {
   const [status, setStatus] = useState<'idle'| 'connecting' | 'listening' | 'mic-off' | 'speaking'>('idle');
   useBackExit();
   const [permissionStatus, setPermissionStatus] = useState<'undetermined' | 'granted' | 'denied'>('undetermined');
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
   useEffect(() => {
     getUserDetails()
     checkMicPermission();
+    getAuthToken();
   }, []);
 
   const getUserDetails = async() =>{
@@ -33,6 +35,13 @@ export default function App() {
     }
     if(phone_number){
       setPhone(phone_number)
+    }
+  }
+
+  const getAuthToken = async () => {
+    const token = await SecureStore.getItemAsync('token');
+    if (token) {
+      setAuthToken(token);
     }
   }
 
@@ -62,6 +71,7 @@ export default function App() {
           platform={Platform.OS}
           user_name={user_name}
           phone_number={phone_number}
+          auth_token={authToken}
           get_battery_level={tools.get_battery_level}
           change_brightness={tools.change_brightness}
           flash_screen={tools.flash_screen}

@@ -19,6 +19,7 @@ export default function ConvAiDOMComponent({
   platform,
   user_name,
   phone_number,
+  auth_token,
   permissionStatus,
   checkMicPermission,
   get_battery_level,
@@ -31,6 +32,7 @@ export default function ConvAiDOMComponent({
   platform: string;
   user_name: string;
   phone_number: string;
+  auth_token?: string | null;
   permissionStatus: string;
   checkMicPermission: () => void;
   get_battery_level: typeof tools.get_battery_level;
@@ -79,12 +81,16 @@ export default function ConvAiDOMComponent({
       if(user_name && phone_number){
         setStatus('connecting');
         const signedUrl = await getSignedUrl();
+        const dynamicVars: Record<string, string | number | boolean> = {
+          user_name,
+          phone_number,
+        };
+        if (typeof auth_token === 'string') {
+          dynamicVars.auth_token = auth_token;
+        }
         await conversation.startSession({
           signedUrl,
-          dynamicVariables: {
-            user_name,
-            phone_number
-          },
+          dynamicVariables: dynamicVars,
           clientTools: {
             get_battery_level,
             change_brightness,
