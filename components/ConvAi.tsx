@@ -86,7 +86,7 @@ export default function ConvAiDOMComponent({
           phone_number,
         };
         if (typeof auth_token === 'string') {
-          dynamicVars.auth_token = auth_token;
+          dynamicVars.auth_token = `Token ${auth_token}`;
         }
         await conversation.startSession({
           signedUrl,
