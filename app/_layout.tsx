@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native';
+import { TextSettingsProvider } from '@/context/TextSettingsContext';
+import { LanguageProvider } from '@/context/LanguageContext';
 
 
 export default function RootLayout() {
@@ -12,9 +14,13 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthContextProvider>
-      <SafeAreaView style={styles.container}>
-        <RootLayoutNav />
-      </SafeAreaView>
+      <LanguageProvider>
+        <TextSettingsProvider>
+          <SafeAreaView style={styles.container}>
+            <RootLayoutNav />
+          </SafeAreaView>
+        </TextSettingsProvider>
+      </LanguageProvider>
       </AuthContextProvider>
     </QueryClientProvider>
   );

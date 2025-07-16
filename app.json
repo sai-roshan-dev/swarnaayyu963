@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.sai.swarnaayu",
-      "buildNumber": "1.0.1"
+      "buildNumber": "2.0.0"
     },
     "android": {
       "adaptiveIcon": {
@@ -38,7 +38,7 @@
     "owner": "balaji_naga",
     "extra": {
       "eas": {
-            "projectId": "ff87bad1-0c47-4288-a50a-58668e21f2cf"
+             "projectId": "1c129fbf-9acc-4ec7-80c3-a48c038a3422"
       }
     }
   }

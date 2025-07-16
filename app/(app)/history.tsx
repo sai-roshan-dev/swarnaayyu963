@@ -16,6 +16,9 @@ import { useAddChatMessage, useMessages } from '@/hooks/useChatMessages';
 import { formatChatTimestamp } from '@/components/utilities/timestampfomat';
 import { Audio } from 'expo-av';
 import Slider from '@react-native-community/slider';
+import { useRouter } from 'expo-router';
+import { useLanguage } from '@/context/LanguageContext';
+import { ThemedText } from '@/components/ThemedText';
 
 type MessageType = {
   user_message: string;
@@ -78,6 +81,8 @@ const ChatScreen = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const flatListRef = useRef<FlatList<MessageType>>(null);
   const soundRef = useRef<Audio.Sound | null>(null);
+  const router = useRouter();
+  const { t } = useLanguage();
 
   const { data: chatMessages, isLoading } = useMessages();
   const { mutate: addMessage } = useAddChatMessage();
@@ -138,7 +143,7 @@ const ChatScreen = () => {
               {item.audio_url ? (
                 <AudioPlayer url={item.audio_url} />
               ) : (
-                <Text style={styles.messageText}>{item.user_message}</Text>
+                <ThemedText style={styles.messageText}>{item.user_message}</ThemedText>
               )}
             </View>
             <Text style={[styles.timestamp, styles.myTimestamp]}>
@@ -160,7 +165,7 @@ const ChatScreen = () => {
                 {item.bot_response === "Typing..." ? (
                   <TypingDots />
                 ) : (
-                  <Text style={styles.messageText}>{item.bot_response}</Text>
+                  <ThemedText style={styles.messageText}>{item.bot_response}</ThemedText>
                 )}
               </View>
               {item.bot_response !== "Typing..." && (
@@ -250,7 +255,7 @@ const ChatScreen = () => {
       <View style={{ width: '100%' }}>
         <TouchableOpacity onPress={togglePlayPause} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
           <Ionicons name={isPlaying ? 'pause' : 'play'} size={20} color="#007AFF" style={{ marginRight: 6 }} />
-          <Text style={{ color: '#007AFF', fontWeight: 'bold' }}>{isPlaying ? 'Pause' : 'Play Audio'}</Text>
+          <ThemedText style={{ color: '#007AFF', fontWeight: 'bold' }}>{isPlaying ? t('pause') : t('play_audio')}</ThemedText>
         </TouchableOpacity>
         <Slider
           style={{ width: '100%', height: 20 }}
@@ -284,6 +289,14 @@ const ChatScreen = () => {
 
   return (
     <View style={styles.container}>
+      {/* Top Navbar */}
+      <View style={styles.navbar}>
+        <TouchableOpacity onPress={() => router.push('/')}> 
+          <Ionicons name="arrow-back" size={28} color="#222" />
+        </TouchableOpacity>
+        <ThemedText type="title" style={styles.navbarTitle}>{t('history')}</ThemedText>
+        <View style={{ width: 28 }} />
+      </View>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
@@ -305,9 +318,8 @@ const ChatScreen = () => {
           ListHeaderComponent={
             isLoadingMore ? <ActivityIndicator size="large" style={{ marginVertical: 8 }} /> : null
           }
-          
           ListFooterComponent={
-            displayedMessages.length > 0 && displayedMessages[0].bot_response === "Typing..." ? (
+            displayedMessages.length > 0 && displayedMessages[0].bot_response === t('typing') ? (
               <TypingDots />
             ) : null
           }
@@ -319,7 +331,7 @@ const ChatScreen = () => {
               style={styles.input}
               value={newMessage}
               onChangeText={setNewMessage}
-              placeholder="Type a message..."
+              placeholder={t('type_message')}
               placeholderTextColor="#999"
             />
             <TouchableOpacity
@@ -337,6 +349,23 @@ const ChatScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f0f0f0' },
+  navbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 0,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  navbarTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#111',
+    textAlign: 'center',
+  },
   messagesList: { paddingHorizontal: 15, paddingBottom: 10 },
   messageContainer: { marginVertical: 2, flexDirection: 'row' },
   myMessageContainer: { justifyContent: 'flex-end' },
