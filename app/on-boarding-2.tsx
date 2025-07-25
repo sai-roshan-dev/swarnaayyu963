@@ -1,20 +1,20 @@
-// app/on-boarding.tsx
+// app/on-boarding-2.tsx
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 
-export default function OnBoarding() {
+export default function OnBoarding2() {
   const router = useRouter();
 
   return (
     <View style={styles.container}>
       <View style={{ flex: 1 }} />
-      <Text style={styles.title}>Lonely? Bored? Curious?</Text>
+      <Text style={styles.title}>Your AI Assistant</Text>
       <Text style={styles.subtitle}>
-        Just say hi – I’m ready to talk whenever you are
+        I’m always here for a chat - anytime, anywhere.
       </Text>
       <Image
-        source={require('../assets/images/onboarding1.png')}
+        source={require('../assets/images/onboarding2.png')}
         style={styles.image}
         resizeMode="contain"
       />
@@ -24,11 +24,11 @@ export default function OnBoarding() {
           <Text style={styles.skip}>Skip</Text>
         </TouchableOpacity>
         <View style={styles.dots}>
+          <View style={styles.dot} />
           <View style={[styles.dot, styles.activeDot]} />
           <View style={styles.dot} />
-          <View style={styles.dot} />
         </View>
-        <TouchableOpacity onPress={() => router.replace('/on-boarding-2')}>
+        <TouchableOpacity onPress={() => router.replace('/on-boarding-3')}>
           <Text style={styles.next}>Next</Text>
         </TouchableOpacity>
       </View>

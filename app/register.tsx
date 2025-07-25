@@ -2,43 +2,24 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
   Platform,
   Alert,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useRouter } from 'expo-router';
-import { useAuthMutation } from "../hooks/useAuthMutation";
+import { useAuthMutation } from '../hooks/useAuthMutation';
 import InputField from '@/components/FormInput';
 import { Controller, useForm } from 'react-hook-form';
-import PhoneInput from '@/components/FormPhoneInput';
-import { Picker } from '@react-native-picker/picker';
+import { Ionicons } from '@expo/vector-icons';
+import { useLanguage } from '@/context/LanguageContext';
+import { ThemedText } from '@/components/ThemedText';
+import CountryPicker, { Country } from 'react-native-country-picker-modal';
 import axios from 'axios';
-
-const staticCountryList = [
-  { label: 'India', value: 'India' },
-  { label: 'United States', value: 'United States' },
-  { label: 'Brazil', value: 'Brazil' },
-  { label: 'Australia', value: 'Australia' },
-  { label: 'Canada', value: 'Canada' },
-  { label: 'Germany', value: 'Germany' },
-  { label: 'France', value: 'France' },
-  { label: 'Japan', value: 'Japan' },
-  { label: 'South Africa', value: 'South Africa' },
-  { label: 'United Kingdom', value: 'United Kingdom' },
-  { label: 'Italy', value: 'Italy' },
-  { label: 'Mexico', value: 'Mexico' },
-  { label: 'Russia', value: 'Russia' },
-  { label: 'China', value: 'China' },
-  { label: 'Argentina', value: 'Argentina' },
-  { label: 'Turkey', value: 'Turkey' },
-  { label: 'Egypt', value: 'Egypt' },
-  { label: 'Spain', value: 'Spain' },
-  { label: 'Indonesia', value: 'Indonesia' },
-  { label: 'Nigeria', value: 'Nigeria' },
-];
 
 export default function RegisterScreen() {
   const { mutate, isPending } = useAuthMutation('register');
@@ -49,14 +30,20 @@ export default function RegisterScreen() {
       gender: '',
       location: '',
       phoneNumber: '',
-    }
+    },
   });
 
   const [accountExists, setAccountExists] = useState(false);
   const router = useRouter();
+  const { t } = useLanguage();
+
+  const [country, setCountry] = useState<Country | null>(null);
+  const [countryCode, setCountryCode] = useState('+91'); // Default to India
+  const [cca2, setCca2] = useState<Country['cca2']>('IN'); // or your default
+  const [showPicker, setShowPicker] = useState(false);
 
   const handleRegister = (formData: any) => {
-    const fullPhone = '91' + formData.phoneNumber;
+    const fullPhone = countryCode.replace('+', '') + formData.phoneNumber;
     setAccountExists(false);
     mutate(formData, {
       onSuccess: (response) => {
@@ -66,25 +53,25 @@ export default function RegisterScreen() {
             onPress: async () => {
               try {
                 await axios.post('https://bot.swarnaayu.com/auth/login/', {
-                  phone_number: `+${fullPhone}`
+                  phone_number: `+${fullPhone}`,
                 });
               } catch (err) {
                 Alert.alert('Notice', 'OTP may not have been sent automatically. Please try logging in if you do not receive an OTP.');
               }
               router.push({ pathname: '/otp', params: { phoneNumber: fullPhone } });
-            }
-          }
+            },
+          },
         ]);
       },
       onError: (error: any) => {
-        console.error("Error:", error.response.data)
-        if(!error.response.data.exists){
+        console.error('Error:', error.response.data);
+        if (!error.response.data.exists) {
           setAccountExists(true);
-        }else{
-          Alert.alert("Something went wrong!!")
+        } else {
+          Alert.alert('Something went wrong!!');
         }
-      }
-    })
+      },
+    });
   };
 
   const redirectLogin = () => {
@@ -102,36 +89,35 @@ export default function RegisterScreen() {
         <InputField
           control={control}
           name="fullname"
-          label="Name"
-          placeholder="Enter your name"
-          rules={{ required: 'Name is required' }}
+          label={t('name')}
+          placeholder={t('enter_name')}
+          rules={{ required: t('name_required') }}
           labelStyle={styles.label}
         />
 
         <InputField
           control={control}
           name="age"
-          label="Age"
-          placeholder="Enter your age"
+          label={t('age')}
+          placeholder={t('enter_age')}
           keyboardType="numeric"
           rules={{
-            required: 'Age is required',
+            required: t('age_required'),
             pattern: {
               value: /^[0-9]{1,2}$/,
-              message: 'Age must be a valid number with 2 digits',
+              message: t('age_valid'),
             },
           }}
           labelStyle={styles.label}
         />
 
         <Text style={styles.label}>
-          Gender <Text style={{ color: 'red' }}>*</Text>
+          {t('gender')} <Text style={{ color: 'red' }}>*</Text>
         </Text>
-
         <Controller
           control={control}
           name="gender"
-          rules={{ required: 'Please select a gender' }}
+          rules={{ required: t('gender_required') }}
           render={({ field: { onChange, value } }) => (
             <View style={styles.radioGroup}>
               {['Male', 'Female', 'Other'].map((option) => (
@@ -149,59 +135,94 @@ export default function RegisterScreen() {
             </View>
           )}
         />
-        {errors.gender && <Text style={[styles.errorText, {paddingBottom: 5}]}>{errors.gender.message}</Text>}
+        {errors.gender && <Text style={[styles.errorText, { paddingBottom: 5 }]}>{errors.gender.message}</Text>}
 
         <Text style={styles.label}>
-          Country <Text style={{ color: 'red' }}>*</Text>
+          {t('whatsapp_number')} <Text style={{ color: 'red' }}>*</Text>
         </Text>
-        <Controller
-          control={control}
-          name="location"
-          rules={{ required: 'Country is required' }}
-          render={({ field: { onChange, value }, fieldState: { error } }) => (
-            <View style={{ marginBottom: 12, borderWidth: 0.5, borderColor: error ? 'red' : '#999', borderRadius: 5 }}>
-              <Picker
-                selectedValue={value}
-                onValueChange={onChange}
-                style={{ color: '#000', fontSize: 16 }}
-              >
-                <Picker.Item label="Select your country" value="" />
-                {staticCountryList.map((country) => (
-                  <Picker.Item key={country.value} label={country.label} value={country.value} />
-                ))}
-              </Picker>
-              {error && <Text style={styles.errorText}>{error.message}</Text>}
-            </View>
-          )}
-        />
+        <View style={[styles.phoneContainer, errors.phoneNumber && styles.inputError]}>
+          <TouchableOpacity
+            style={styles.countryCodeBox}
+            onPress={() => setShowPicker(true)}
+          >
+            <ThemedText style={styles.countryCodeText}>
+              {country ? `+${country.callingCode[0]}` : countryCode}
+            </ThemedText>
+            <Ionicons name="chevron-down" size={16} color="#6c63ff" style={{ marginLeft: 2 }} />
+          </TouchableOpacity>
+          <CountryPicker
+            withFilter
+            withFlag
+            withCallingCode
+            withCountryNameButton={false}
+            withEmoji
+            onSelect={(country) => {
+              setCountryCode('+' + country.callingCode[0]);
+              setCca2(country.cca2);
+              setCountry(country);
+              setShowPicker(false);
+            }}
+            visible={showPicker}
+            onClose={() => setShowPicker(false)}
+            countryCode={cca2}
+            theme={{
+              onBackgroundTextColor: '#222',
+              backgroundColor: '#fff',
+              primaryColor: '#6c63ff',
+            }}
+          />
+          <Controller
+            control={control}
+            name="phoneNumber"
+            rules={{
+              required: t('phone_required'),
+              minLength: { value: 8, message: t('phone_digits') },
+            }}
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <TextInput
+                style={styles.phoneInput}
+                placeholder={t('enter_phone')}
+                placeholderTextColor="#b3aefc"
+                keyboardType="phone-pad"
+                maxLength={15}
+                onChangeText={text => {
+                  setAccountExists(false);
+                  onChange(text);
+                }}
+                value={value}
+              />
+            )}
+          />
+        </View>
+        {errors.phoneNumber && <Text style={styles.errorText}>{errors.phoneNumber.message}</Text>}
 
-        <PhoneInput
-          control={control}
-          name="phoneNumber"
-          label="WhatsApp Number"
-        />
-
-        {/* Inline error message for account exists */}
         {accountExists && (
           <Text style={{ color: 'red', textAlign: 'center', marginBottom: 10 }}>
-            Account Already Exists. Continue to <Text
-            style={{ color: 'red', fontWeight: 'bold', textDecorationLine: 'underline' }}
-            onPress={() => router.push('/login')}
-          >
-            Login
-          </Text>
+            {t('account_exists')}. {t('continue_to')}{' '}
+            <ThemedText
+              style={{ color: '#e53935', fontWeight: 'bold', textDecorationLine: 'underline' }}
+              onPress={() => router.push('/login')}
+            >
+              {t('login')}
+            </ThemedText>
+            .
           </Text>
         )}
-        <TouchableOpacity 
-          style={[styles.button, isPending && styles.buttonDisabled]} 
+        <TouchableOpacity
+          style={[styles.button, isPending && styles.buttonDisabled]}
           onPress={handleSubmit(handleRegister)}
           disabled={isPending}
         >
-          <Text style={styles.buttonText}>{isPending ? 'Registering...' : 'Register'}</Text>
+          {isPending ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>{isPending ? 'Registering...' : t('register')}</Text>
+          )}
         </TouchableOpacity>
 
         <Text style={styles.loginText} onPress={redirectLogin}>
-          Already have an account? <Text style={styles.loginLink}><Text style={{fontWeight: 'bold'}}>Login</Text></Text>
+          {t('already_have_account')}{' '}
+          <Text style={styles.loginLink}><Text style={{ fontWeight: 'bold' }}>{t('login')}</Text></Text>
         </Text>
       </View>
     </ScrollView>
@@ -212,14 +233,12 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    //paddingVertical: 24,
   },
   container: {
     flex: 1,
     paddingHorizontal: wp('10%'),
     justifyContent: 'center',
     backgroundColor: '#fff',
-    //paddingTop: 10
   },
   title: {
     fontSize: wp('6.5%'),
@@ -240,54 +259,51 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: wp('4%'),
-    fontWeight: 'bold', // Make it bold
+    fontWeight: 'bold',
     marginBottom: hp('1%'),
-    color: '#333', // Optional: darker for better readability
+    color: '#333',
   },
-  
-  required: {
-    color: 'red',
+  phoneContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#a99af7',
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginBottom: 18,
+    backgroundColor: '#fff',
+    height: hp('6%'),
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: wp('2%'),
-    paddingVertical: Platform.OS === 'ios' ? hp('1.5%') : hp('1%'),
-    paddingHorizontal: wp('4%'),
-    fontSize: wp('4%'),
-    color: '#000',
-    marginBottom: 5,
+  countryCodeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRightWidth: 1,
+    borderRightColor: '#a99af7',
+    backgroundColor: 'transparent',
+  },
+  countryCodeText: {
+    fontSize: 16,
+    color: '#6c63ff',
+    fontWeight: '700',
+    marginRight: 5,
+  },
+  phoneInput: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    color: '#222',
+    backgroundColor: '#fff',
   },
   inputError: {
     borderColor: 'red',
   },
-
-  
-  phoneContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: wp('2%'),
-    overflow: 'hidden',
-  },
-  countryCode: {
-    paddingHorizontal: wp('3%'),
-    paddingVertical: Platform.OS === 'ios' ? hp('1.5%') : hp('2%'),
-    backgroundColor: '#f1f1f1',
-    // borderRightWidth: 1,
-    borderRadius: wp('1.5%'),
-
-    borderRightColor: '#ccc',
-    fontSize: wp('4%'),
-    color: '#000',
-  },
-  phoneInput: {
-    flex: 1,
-    paddingVertical: Platform.OS === 'ios' ? hp('1.5%') : hp('1%'),
-    paddingHorizontal: wp('4%'),
-    fontSize: wp('4%'),
-    color: '#000',
+  errorText: {
+    color: 'red',
+    fontSize: wp('3.5%'),
+    marginTop: hp('0.5%'),
   },
   button: {
     backgroundColor: '#007BFF',
@@ -306,17 +322,12 @@ const styles = StyleSheet.create({
     fontSize: wp('4.5%'),
     fontWeight: '600',
   },
-  errorText: {
-    color: 'red',
-    fontSize: wp('3.5%'),
-    marginTop: hp('0.5%'),
-  },
   loginText: {
     marginTop: hp('3%'),
     textAlign: 'center',
     fontSize: wp('4%'),
     color: '#333',
-    marginBottom: 20
+    marginBottom: 20,
   },
   loginLink: {
     color: '#007BFF',
@@ -342,7 +353,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
   },
-  
   selectedRadio: {
     height: 10,
     width: 10,
@@ -352,7 +362,7 @@ const styles = StyleSheet.create({
   radioLabel: {
     fontSize: 14,
     color: '#333',
-    marginLeft: 5
+    marginLeft: 5,
   },
   buttonDisabled: {
     opacity: 0.7,

@@ -37,7 +37,7 @@ export default function ConversationScreen() {
   const startConversatio = async () => {
     try {
       // Get signed URL from your backend or directly from ElevenLabs
-      const signedUrl = await getSignedUrl();
+      const signedUrl = await getSignedUrl('EIsgvJT3rwoPvRFG6c4n');
     //   const ws = connectToAgent(signedUrl, async (audioBlob: any) => {
     //     const sound = new Audio.Sound();
     //     const uri = URL.createObjectURL(audioBlob); // If blob is playable
@@ -111,7 +111,7 @@ export default function ConversationScreen() {
 
   const startConversation = async () => {
     try {
-      const signedUrl = await getSignedUrl();
+      const signedUrl = await getSignedUrl('EIsgvJT3rwoPvRFG6c4n');
       const token = await SecureStore.getItemAsync('token');
       if (!token) {
         alert('No authentication token found. Please log in again.');

@@ -1,37 +1,38 @@
-// app/on-boarding.tsx
+// app/on-boarding-3.tsx
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 
-export default function OnBoarding() {
+export const screenOptions = {
+  headerShown: false,
+};
+
+export default function OnBoarding3() {
   const router = useRouter();
 
   return (
     <View style={styles.container}>
       <View style={{ flex: 1 }} />
-      <Text style={styles.title}>Lonely? Bored? Curious?</Text>
+      <Text style={styles.title}>Your Wellness Buddy</Text>
       <Text style={styles.subtitle}>
-        Just say hi – I’m ready to talk whenever you are
+        We gently guide your health journey — like a caring buddy.
       </Text>
       <Image
-        source={require('../assets/images/onboarding1.png')}
+        source={require('../assets/images/onboarding3.png')}
         style={styles.image}
         resizeMode="contain"
       />
       <View style={{ flex: 1 }} />
       <View style={styles.bottomRow}>
-        <TouchableOpacity onPress={() => router.replace('/login')}>
-          <Text style={styles.skip}>Skip</Text>
-        </TouchableOpacity>
         <View style={styles.dots}>
+          <View style={styles.dot} />
+          <View style={styles.dot} />
           <View style={[styles.dot, styles.activeDot]} />
-          <View style={styles.dot} />
-          <View style={styles.dot} />
         </View>
-        <TouchableOpacity onPress={() => router.replace('/on-boarding-2')}>
-          <Text style={styles.next}>Next</Text>
-        </TouchableOpacity>
       </View>
+      <TouchableOpacity style={styles.button} onPress={() => router.replace('/login')}>
+        <Text style={styles.buttonText}>Get Started</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -45,14 +46,25 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     marginBottom: 32,
   },
-  skip: { color: '#4F46E5', fontSize: 18, marginLeft: 8 },
-  next: { color: '#000', fontSize: 18, marginRight: 8 },
   dots: { flexDirection: 'row', alignItems: 'center' },
   dot: {
     width: 10, height: 10, borderRadius: 5, backgroundColor: '#E5E7EB', marginHorizontal: 4,
   },
   activeDot: { backgroundColor: '#4F46E5' },
-});
+  button: {
+    width: '100%',
+    backgroundColor: '#4F46E5',
+    paddingVertical: 18,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '600',
+  },
+}); 

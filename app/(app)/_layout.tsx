@@ -10,6 +10,7 @@ export default function AppLayout() {
       <Stack.Screen name="history" />
       <Stack.Screen name="edit-profile" />
       <Stack.Screen name="my-privacy" />
+      <Stack.Screen name="about-aayu" />
     </Stack>
   )
 }

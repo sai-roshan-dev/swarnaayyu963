@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useLanguage } from '@/context/LanguageContext';
 import { ThemedText } from '@/components/ThemedText';
+import * as SecureStore from 'expo-secure-store';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -11,6 +12,47 @@ export default function EditProfileScreen() {
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState<'Male' | 'Female' | 'Others'>('Male');
+  const [loading, setLoading] = useState(false);
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const token = await SecureStore.getItemAsync('token');
+      if (!token) {
+        Alert.alert('Error', 'No auth token found. Please log in again.');
+        setLoading(false);
+        return;
+      }
+      const response = await fetch('https://bot.swarnaayu.com/user/update_profile/', {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          full_name: name,
+          age: Number(age),
+          gender: gender.toLowerCase(),
+        }),
+      });
+      if (response.ok) {
+        // // Update SecureStore with new details
+        // await SecureStore.setItemAsync('name', name);
+        // await SecureStore.setItemAsync('age', age);
+        // await SecureStore.setItemAsync('gender', gender);
+        Alert.alert('Success', 'Profile updated successfully!', [
+          { text: 'OK', onPress: () => router.back() },
+        ]);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        Alert.alert('Error', errorData.detail || 'Failed to update profile.');
+      }
+    } catch (err) {
+      Alert.alert('Error', 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -57,8 +99,12 @@ export default function EditProfileScreen() {
             </TouchableOpacity>
           ))}
         </View>
-        <TouchableOpacity style={styles.saveButton}>
-          <ThemedText style={styles.saveButtonText}>{t('save')}</ThemedText>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={loading}>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <ThemedText style={styles.saveButtonText}>{t('save')}</ThemedText>
+          )}
         </TouchableOpacity>
       </View>
     </View>

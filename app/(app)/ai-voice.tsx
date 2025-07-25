@@ -51,7 +51,7 @@ export default function AiVoice() {
       setStatus('connecting');
       
       // Get signed URL from ElevenLabs
-      const signedUrl = await getSignedUrl();
+      const signedUrl = await getSignedUrl('EIsgvJT3rwoPvRFG6c4n');
       
       // Start the conversation session and capture the conversationId
       const conversationId = await conversation.startSession({

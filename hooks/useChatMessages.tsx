@@ -56,7 +56,16 @@ const fetchMessages = async (): Promise<ConversationHistory[]> => {
         },
       }
     );
-      allMessages = allMessages.concat(response.data.results.conversation_history || []);
+      // Map each message to flatten transcript fields
+      const mappedMessages = (response.data.results.conversation_history || []).map((msg: any) => ({
+        user_message: msg.transcript?.user_message || "",
+        bot_response: msg.transcript?.bot_response || "",
+        timestamp: msg.timestamp,
+        channel: msg.channel,
+        mode: msg.mode,
+        audio_url: msg.audio_url,
+      }));
+      allMessages = allMessages.concat(mappedMessages);
       nextUrl = response.data.next;
     }
     return allMessages;

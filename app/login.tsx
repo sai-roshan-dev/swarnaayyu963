@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform, Alert, ActivityIndicator,BackHandler } from 'react-native';
 import { useRouter } from 'expo-router';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import * as SecureStore from 'expo-secure-store';
@@ -11,54 +11,51 @@ import PhoneInput from '@/components/FormPhoneInput';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '@/context/LanguageContext';
 import { ThemedText } from '@/components/ThemedText';
-
-
-interface FormErrors {
-  name ?: string;
-  phone ?: string;
-}
+import CountryPicker, { Country } from 'react-native-country-picker-modal';
 
 export default function LoginScreen() {
- 
   const router = useRouter();
   const { mutate, isPending } = useAuthMutation('login');
   const { control, handleSubmit, formState: { errors } } = useForm();
   const { t } = useLanguage();
 
   const [accountNotFound, setAccountNotFound] = useState(false);
+  const [country, setCountry] = useState<Country | null>(null);
+  const [countryCode, setCountryCode] = useState('+1'); // Default to +1 (USA)
+  const [cca2, setCca2] = useState<Country['cca2']>('IN'); // or your default
+  const [showPicker, setShowPicker] = useState(false);
 
   useBackExit();
 
   const handleLogin = (data: any) => {
-    const {name, phoneNumber } = data;
-    const fullPhone = '91' + phoneNumber;
+    const { phoneNumber } = data;
+    const fullPhone = countryCode.replace('+', '') + phoneNumber;
     SecureStore.setItemAsync('loginType', 'login');
     setAccountNotFound(false);
-    mutate(data,{
+    mutate(data, {
       onSuccess: (data) => {
         router.push({ pathname: '/otp', params: { phoneNumber: fullPhone } });
       },
       onError: (error: any) => {
-        console.log(error.response.data, 'checking login')
-        if(!error.response.data.exists){
+        if (!error.response.data.exists) {
           setAccountNotFound(true);
-        }else{
+        } else {
           Alert.alert('Login Alert', `Something went wrong!!`, [
             { text: 'OK', style: 'cancel' },
           ]);
         }
       }
-    })
+    });
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <View style={{ flex: 1, backgroundColor: '#6c63ff' }}>
       {/* Top Purple Header */}
       <View style={styles.topSection}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={28} color="#fff" />
+        <TouchableOpacity style={styles.backButton} onPress={() => BackHandler.exitApp()}>
+          <Ionicons name="chevron-back" size={30} color="#FFFFFF" />
         </TouchableOpacity>
-        <ThemedText type="title" style={styles.title}>{t('welcome')}</ThemedText>
+        <ThemedText type="title" style={styles.title}>{t('welcome')} Back</ThemedText>
         <ThemedText type="subtitle" style={styles.subtitle}>{t('login_subtitle')}</ThemedText>
       </View>
       {/* White Card */}
@@ -68,22 +65,55 @@ export default function LoginScreen() {
           name="phoneNumber"
           rules={{
             required: t('phone_required'),
-            minLength: { value: 10, message: t('phone_digits') },
+            minLength: { value: 8, message: t('phone_digits') }, // Flexible minLength
           }}
           render={({ field: { onChange, value }, fieldState: { error } }) => (
             <>
               <ThemedText style={styles.label}>{t('whatsapp_number')}</ThemedText>
               <View style={[styles.phoneContainer, error && styles.inputError]}>
-                <View style={styles.countryCodeBox}>
-                  <ThemedText style={styles.countryCodeText}>+91</ThemedText>
+                <TouchableOpacity
+                  style={styles.countryCodeBox}
+                  onPress={() => setShowPicker(true)}
+                >
+                  <ThemedText style={styles.countryCodeText}>
+                    {country ? `+${country.callingCode[0]}` : countryCode}
+                  </ThemedText>
                   <Ionicons name="chevron-down" size={16} color="#6c63ff" style={{ marginLeft: 2 }} />
-                </View>
+                </TouchableOpacity>
+                {showPicker && (
+  <View style={styles.overlay}>
+    <View style={styles.pickerContainer}>
+      <CountryPicker
+        withFilter
+        withFlag
+        withCallingCode
+        withCountryNameButton={false}
+        withEmoji
+        onSelect={(country) => {
+          setCountryCode('+' + country.callingCode[0]);
+          setCca2(country.cca2);
+          setCountry(country);
+          setShowPicker(false);
+        }}
+        visible
+        onClose={() => setShowPicker(false)}
+        countryCode={cca2}
+        theme={{
+          onBackgroundTextColor: '#222',
+          backgroundColor: '#fff',
+          primaryColor: '#6c63ff',
+        }}
+      />
+    </View>
+  </View>
+)}
+
                 <TextInput
                   style={styles.phoneInput}
                   placeholder={t('enter_phone')}
                   placeholderTextColor="#b3aefc"
                   keyboardType="phone-pad"
-                  maxLength={10}
+                  maxLength={15} // Allow flexibility for different country codes
                   onChangeText={text => {
                     setAccountNotFound(false);
                     onChange(text);
@@ -136,31 +166,56 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: hp('30%'),
+    left: wp('5%'),
+    right: wp('5%'),
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 99,
+  },
+  
+  pickerContainer: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    padding: 10,
+  },
+  
   topSection: {
     backgroundColor: '#6c63ff',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
     paddingTop: 48,
-    paddingBottom: 40,
+    paddingBottom: 100,
     alignItems: 'center',
     position: 'relative',
   },
   backButton: {
     position: 'absolute',
-    left: 16,
-    top: 52,
+    left: 20,
+    top: 21,
     zIndex: 2,
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
     color: '#fff',
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: 50,
+    marginBottom: 15,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
+    fontWeight: 500,
     color: '#e6e6fa',
     textAlign: 'center',
     marginBottom: 0,
@@ -168,15 +223,14 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 24,
-    marginHorizontal: 16,
-    marginTop: -40,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    marginHorizontal: 0,
+    marginTop: 0,
     padding: 24,
+    paddingTop: 100,
+    paddingBottom: 200,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
   },
   label: {
     fontWeight: '700',
@@ -194,25 +248,27 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 18,
     backgroundColor: '#fff',
+    height: hp('6%'),
   },
   countryCodeBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f3f2fa',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRightWidth: 1,
     borderRightColor: '#a99af7',
+    backgroundColor: 'transparent',
   },
   countryCodeText: {
     fontSize: 16,
     color: '#6c63ff',
     fontWeight: '700',
+    marginRight: 5,
   },
   phoneInput: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     fontSize: 16,
     color: '#222',
     backgroundColor: '#fff',

@@ -1,7 +1,7 @@
 import { Text, type TextProps, StyleSheet } from 'react-native';
 
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { useTextSettings } from '@/context/TextSettingsContext';
+import { useTextSize } from '@/context/TextSettingsContext';
 
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
@@ -17,7 +17,7 @@ export function ThemedText({
   ...rest
 }: ThemedTextProps) {
   const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-  const { textSize } = useTextSettings();
+  const { textSize } = useTextSize();
 
   // Map textSize to fontSize multiplier
   const sizeMap = {

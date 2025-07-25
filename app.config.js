@@ -5,7 +5,7 @@ export default {
   expo: {
     name: "Aayu",
     slug: "aayu",
-    version: "2.0.0",
+    version: "3.1.0",
     orientation: "portrait",
     scheme: "Aayu",
     userInterfaceStyle: "automatic",
@@ -53,7 +53,7 @@ export default {
       XI_AGENT_ID: process.env.XI_AGENT_ID,
       XI_API_KEY: process.env.XI_API_KEY,
       eas: {
-        "projectId": "1c129fbf-9acc-4ec7-80c3-a48c038a3422" 
+          "projectId": "a5caea60-ffa9-4dbb-87fd-2be7b6670ad1"
       }
     }
   }

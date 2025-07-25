@@ -108,33 +108,42 @@ export default function SettingsScreen() {
     onToggle?: () => void;
     icon?: React.ReactNode;
     expandedContent?: React.ReactNode;
-  }) => (
-    <>
-      <TouchableOpacity
-        onPress={onPress}
-        activeOpacity={onPress ? 0.6 : 1}
-        style={styles.row}
-      >
-        <View style={styles.left}>{icon}</View>
-        <View style={styles.middle}>
-          <ThemedText style={[styles.label, { fontSize: getFontSize() }]}>{label}</ThemedText>
-        </View>
-        {isToggle ? (
-          <Switch value={toggleValue} onValueChange={onToggle} />
-        ) : (
-          <View style={styles.right}>
-            {value && <ThemedText style={[styles.value, { fontSize: getFontSize() }]}>{value}</ThemedText>}
-            {hasArrow && (
-              <Ionicons name="chevron-down" size={20} color="#6c63ff" style={{ transform: [{ rotate: expanded[label] ? '180deg' : '0deg' }] }} />
-            )}
+  }) => {
+    // Use right arrow for Edit Profile, My Privacy, About Aayu
+    const useRightArrow = [t('edit_profile'), t('my_privacy'), t('about_aayu')].includes(label);
+    return (
+      <>
+        <TouchableOpacity
+          onPress={onPress}
+          activeOpacity={onPress ? 0.6 : 1}
+          style={styles.row}
+        >
+          <View style={styles.left}>{icon}</View>
+          <View style={styles.middle}>
+            <ThemedText style={[styles.label, { fontSize: getFontSize() }]}>{label}</ThemedText>
           </View>
+          {isToggle ? (
+            <Switch value={toggleValue} onValueChange={onToggle} />
+          ) : (
+            <View style={styles.right}>
+              {value && <ThemedText style={[styles.value, { fontSize: getFontSize() }]}>{value}</ThemedText>}
+              {hasArrow && (
+                <Ionicons
+                  name={useRightArrow ? 'chevron-forward' : 'chevron-down'}
+                  size={20}
+                  color="#6c63ff"
+                  style={useRightArrow ? undefined : { transform: [{ rotate: expanded[label] ? '180deg' : '0deg' }] }}
+                />
+              )}
+            </View>
+          )}
+        </TouchableOpacity>
+        {expandedContent && expanded[label] && (
+          <View style={styles.expandedContent}>{expandedContent}</View>
         )}
-      </TouchableOpacity>
-      {expandedContent && expanded[label] && (
-        <View style={styles.expandedContent}>{expandedContent}</View>
-      )}
-    </>
-  );
+      </>
+    );
+  };
 
   const dynamicStyles = {
     label: {
@@ -289,13 +298,12 @@ export default function SettingsScreen() {
         />
         <SettingRow
           label={t('about_aayu')}
-          onPress={() => toggleExpand('About Aayu')}
+          onPress={() => router.push('/about-aayu')}
           hasArrow
-          expandedContent={<ThemedText style={styles.expandedText}>Aayu is your AI-powered assistant.</ThemedText>}
         />
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logout}>
+        <TouchableOpacity style={styles.logout} onPress={handleLogout}>
           <MaterialIcons name="logout" size={24} color="#e53935" />
           <ThemedText style={styles.logoutText}>{t('logout')}</ThemedText>
         </TouchableOpacity>

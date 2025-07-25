@@ -51,6 +51,8 @@ export default function RootLayoutNav() {
           <Stack.Screen name="otp" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="on-boarding" options={{ headerShown: false }} />
+          <Stack.Screen name="on-boarding-2" options={{ headerShown: false }} />
+          <Stack.Screen name="on-boarding-3" options={{ headerShown: false }} />
           <Stack.Screen name="account-created" options={{ headerShown: false }} />
           <Stack.Screen name="welcome" options={{ headerShown: false }} />
           <Stack.Screen name="(app)" options={{ headerShown: false }} />

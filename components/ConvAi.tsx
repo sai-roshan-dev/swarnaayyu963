@@ -11,6 +11,8 @@ import Constants from 'expo-constants';
 import VoiceBubble from './VoiceBubble';
 import VoiceActions from './VoiceActions';
 import { getSignedUrl } from '@/utils/api';
+import { Ionicons } from '@expo/vector-icons';
+import * as SecureStore from 'expo-secure-store';
 
 const { XI_AGENT_ID, XI_API_KEY } = Constants.expoConfig?.extra || {};
 
@@ -43,6 +45,15 @@ export default function ConvAiDOMComponent({
 }) {
   const speakingTimeout = useRef<NodeJS.Timeout | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getToken = async () => {
+      const token = await SecureStore.getItemAsync('token');
+      setAuthToken(token);
+    };
+    getToken();
+  }, []);
 
   const handleMessage = (message: any) => {
     if (message.source === 'ai') {
@@ -74,13 +85,12 @@ export default function ConvAiDOMComponent({
       console.error('Error:', error)
     },
   });
-
   const startConversation = useCallback(async () => {
     try {
       setError(null);
-      if(user_name && phone_number){
+      if (user_name && phone_number) {
         setStatus('connecting');
-        const signedUrl = await getSignedUrl();
+        const signedUrl = await getSignedUrl('EIsgvJT3rwoPvRFG6c4n');
         const dynamicVars: Record<string, string | number | boolean> = {
           user_name,
           phone_number,
@@ -88,6 +98,7 @@ export default function ConvAiDOMComponent({
         if (typeof auth_token === 'string') {
           dynamicVars.auth_token = `Token ${auth_token}`;
         }
+        // Start the session
         await conversation.startSession({
           signedUrl,
           dynamicVariables: dynamicVars,
@@ -97,6 +108,41 @@ export default function ConvAiDOMComponent({
             flash_screen,
           },
         });
+        // Get the conversationId
+        const conversationId = conversation.getId();
+        if (conversationId) {
+          // Try to import API_ENDPOINTS, fallback to hardcoded URL if not available
+          let chatEndpoint = 'https://bot.swarnaayu.com/conversation/chat/';
+          try {
+            // Dynamically import if possible
+            // @ts-ignore
+            const { API_ENDPOINTS } = await import('@/config/api');
+            if (API_ENDPOINTS && API_ENDPOINTS.CHAT) {
+              chatEndpoint = API_ENDPOINTS.CHAT;
+            }
+          } catch (e) {
+            // fallback to hardcoded URL
+          }
+          // Send conversationId to backend
+          const response = await fetch(chatEndpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(auth_token ? { 'Authorization': `Token ${auth_token}` } : {}),
+              'mode': 'voice',
+            },
+            body: JSON.stringify({
+              message: 'hii there ?',
+              conversation_id: conversationId,
+            }),
+          });
+          if (!response.ok) {
+            throw new Error('Failed to send conversation data to backend');
+          }
+        } else {
+          console.error('Conversation ID is undefined');
+          setError('Failed to retrieve conversation ID.');
+        }
       } else {
         setError('User name or phone number is missing.');
       }
@@ -110,7 +156,6 @@ export default function ConvAiDOMComponent({
   const stopConversation = useCallback(async () => {
     await conversation.endSession();
   }, [conversation]);
-
 
 
   return (
