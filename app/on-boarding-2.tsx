@@ -2,17 +2,17 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function OnBoarding2() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <View style={styles.container}>
       <View style={{ flex: 1 }} />
-      <Text style={styles.title}>Your AI Assistant</Text>
-      <Text style={styles.subtitle}>
-        I’m always here for a chat - anytime, anywhere.
-      </Text>
+      <Text style={styles.title}>{t('onboarding.title_2')}</Text>
+      <Text style={styles.subtitle}>{t('onboarding.desc_2')}</Text>
       <Image
         source={require('../assets/images/onboarding2.png')}
         style={styles.image}
@@ -21,7 +21,7 @@ export default function OnBoarding2() {
       <View style={{ flex: 1 }} />
       <View style={styles.bottomRow}>
         <TouchableOpacity onPress={() => router.replace('/login')}>
-          <Text style={styles.skip}>Skip</Text>
+          <Text style={styles.skip}>{t('onboarding.skip')}</Text>
         </TouchableOpacity>
         <View style={styles.dots}>
           <View style={styles.dot} />
@@ -29,7 +29,7 @@ export default function OnBoarding2() {
           <View style={styles.dot} />
         </View>
         <TouchableOpacity onPress={() => router.replace('/on-boarding-3')}>
-          <Text style={styles.next}>Next</Text>
+          <Text style={styles.next}>{t('onboarding.next')}</Text>
         </TouchableOpacity>
       </View>
     </View>

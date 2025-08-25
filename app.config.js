@@ -5,7 +5,7 @@ export default {
   expo: {
     name: "Aayu",
     slug: "aayu",
-    version: "3.1.0",
+    version: "4.2.0",
     orientation: "portrait",
     scheme: "Aayu",
     userInterfaceStyle: "automatic",
@@ -13,11 +13,7 @@ export default {
 
     icon: "./assets/images/image.png",
 
-    splash: {
-      image: "./assets/images/aayu.png",
-      resizeMode: "cover",
-      backgroundColor: "#ffffff",
-    },
+    
 
     ios: {
       infoPlist: {
@@ -26,6 +22,7 @@ export default {
       supportsTablet: true,
       bundleIdentifier: "com.sai.swarnaayu",
       icon: "./assets/images/image.png",
+      buildNumber: "10",
     },
 
     android: {
@@ -53,7 +50,7 @@ export default {
       XI_AGENT_ID: process.env.XI_AGENT_ID,
       XI_API_KEY: process.env.XI_API_KEY,
       eas: {
-          "projectId": "a5caea60-ffa9-4dbb-87fd-2be7b6670ad1"
+                "projectId": "f97393cf-429a-45e2-9585-af03565fd292"
       }
     }
   }

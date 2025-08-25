@@ -1,7 +1,5 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Audio } from 'expo-av';
-import type { Recording } from 'expo-av/build/Audio';
+import React, { useState } from 'react';
+import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 import VoiceBubble from '@/components/VoiceBubble';
 import VoiceActions from '@/components/VoiceActions';
 import { useAuthRedirect } from '@/hooks/useAuthCheck';
@@ -93,7 +91,7 @@ export default function AiVoice() {
 
   return (
     <View style={styles.container}>
-      <View style={{ marginBottom: 50 }}>
+      <View style={styles.bubbleContainer}>
         <TouchableOpacity 
           onPress={handleVoiceButtonPress} 
           disabled={isLoading}
@@ -111,16 +109,18 @@ export default function AiVoice() {
         </View>
       )}
 
-      <VoiceActions
-        status={status}
-        onMicToggle={() => {
-          if (status === 'mic-off') {
-            setStatus('idle');
-          } else {
-            setStatus('mic-off');
-          }
-        }}
-      />
+      <View style={styles.actionsContainer}>
+        <VoiceActions
+          status={status}
+          onMicToggle={() => {
+            if (status === 'mic-off') {
+              setStatus('idle');
+            } else {
+              setStatus('mic-off');
+            }
+          }}
+        />
+      </View>
     </View>
   );
 }
@@ -128,17 +128,28 @@ export default function AiVoice() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  bubbleContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    marginTop: 10,
   },
   loadingContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
     color: '#666',
+  },
+  actionsContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 10,
   },
 });

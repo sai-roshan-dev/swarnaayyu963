@@ -11,7 +11,7 @@ export default function EditProfileScreen() {
   const { t } = useLanguage();
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
-  const [gender, setGender] = useState<'Male' | 'Female' | 'Others'>('Male');
+  const [gender, setGender] = useState<'Male' | 'Female' | 'Prefer not to say'>('Male');
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
@@ -57,11 +57,22 @@ export default function EditProfileScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+      <View style={styles.navbar}>
+        <TouchableOpacity
+          style={{ padding: 10, zIndex: 100, pointerEvents: 'auto' }}
+          onPress={() => {
+            console.log('Back arrow pressed');
+            if (router.canGoBack && router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace('/');
+            }
+          }}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Ionicons name="arrow-back" size={28} color="#222" />
         </TouchableOpacity>
-        <ThemedText type="title" style={styles.headerTitle}>{t('edit_profile')}</ThemedText>
+        <ThemedText style={styles.navbarTitle}>{t('settings')}</ThemedText>
         <View style={{ width: 28 }} />
       </View>
 
@@ -86,14 +97,14 @@ export default function EditProfileScreen() {
         />
         <ThemedText style={[styles.label, { marginTop: 24 }]}>{t('gender')}</ThemedText>
         <View style={styles.genderRow}>
-          {[t('male'), t('female'), t('others')].map((g, idx) => (
+          {[t('Male'), t('Female'), t('Prefer not to say')].map((g, idx) => (
             <TouchableOpacity
               key={g}
               style={styles.genderOption}
-              onPress={() => setGender(['Male', 'Female', 'Others'][idx] as 'Male' | 'Female' | 'Others')}
+              onPress={() => setGender(['Male', 'Female', 'Prefer not to say'][idx] as 'Male' | 'Female' | 'Prefer not to say')}
             >
-              <View style={[styles.radio, gender === ['Male', 'Female', 'Others'][idx] && styles.radioSelected]}>
-                {gender === ['Male', 'Female', 'Others'][idx] && <View style={styles.radioDot} />}
+              <View style={[styles.radio, gender === ['Male', 'Female', 'Prefer not to say'][idx] && styles.radioSelected]}>
+                {gender === ['Male', 'Female', 'Prefer not to say'][idx] && <View style={styles.radioDot} />}
               </View>
               <ThemedText style={styles.genderLabel}>{g}</ThemedText>
             </TouchableOpacity>
@@ -112,16 +123,19 @@ export default function EditProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
+  navbar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: 10,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
+    paddingBottom: 18,
+    paddingHorizontal: 20,
     backgroundColor: '#fff',
+    borderBottomWidth: 0,
+    borderBottomColor: 'transparent',
+    zIndex: 100, // add this
   },
-  headerTitle: {
+  navbarTitle: {
     fontSize: 24,
     fontWeight: '700',
     color: '#111',
@@ -175,7 +189,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#6c63ff',
   },
   genderLabel: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#222',
   },
   saveButton: {

@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform, Alert, ActivityIndicator,BackHandler } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, BackHandler, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useRouter } from 'expo-router';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import * as SecureStore from 'expo-secure-store';
 import { useBackExit } from '@/hooks/useBackClick';
-import { useAuthMutation } from "../hooks/useAuthMutation";
-import InputField from '@/components/FormInput';
+import { useAuthMutation } from '@/hooks/useAuthMutation';
 import { Controller, useForm } from 'react-hook-form';
-import PhoneInput from '@/components/FormPhoneInput';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '@/context/LanguageContext';
 import { ThemedText } from '@/components/ThemedText';
@@ -21,23 +19,33 @@ export default function LoginScreen() {
 
   const [accountNotFound, setAccountNotFound] = useState(false);
   const [country, setCountry] = useState<Country | null>(null);
-  const [countryCode, setCountryCode] = useState('+1'); // Default to +1 (USA)
-  const [cca2, setCca2] = useState<Country['cca2']>('IN'); // or your default
+  const [countryCode, setCountryCode] = useState('+91'); // Default to +91 (India)
+  const [cca2, setCca2] = useState<Country['cca2']>('IN'); // Default to India
   const [showPicker, setShowPicker] = useState(false);
 
   useBackExit();
 
+  const handleBackPress = () => {
+    BackHandler.exitApp();
+  };
+
   const handleLogin = (data: any) => {
     const { phoneNumber } = data;
-    const fullPhone = countryCode.replace('+', '') + phoneNumber;
+    const fullPhone = `${countryCode}${phoneNumber}`;
+    
+    console.log('phoneNumber in login:', phoneNumber); // Debug: Should log 6305517488
+    console.log('fullPhone in login:', fullPhone); // Debug: Should log +916305517488
     SecureStore.setItemAsync('loginType', 'login');
+    SecureStore.setItemAsync('fullPhone', fullPhone); // Save for fallback
     setAccountNotFound(false);
-    mutate(data, {
-      onSuccess: (data) => {
-        router.push({ pathname: '/otp', params: { phoneNumber: fullPhone } });
+    mutate({ phoneNumber: fullPhone }, { // Send fullPhone instead of data
+      onSuccess: (response) => {
+        console.log('Mutation success, params:', { phoneNumber: fullPhone }); // Debug
+        router.push({ pathname: '/otp', params: { phoneNumber: String(fullPhone) } });
       },
       onError: (error: any) => {
-        if (!error.response.data.exists) {
+        console.log('Mutation error:', error.response?.data, error.message); // Debug
+        if (!error.response?.data?.exists) {
           setAccountNotFound(true);
         } else {
           Alert.alert('Login Alert', `Something went wrong!!`, [
@@ -49,147 +57,125 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#6c63ff' }}>
-      {/* Top Purple Header */}
-      <View style={styles.topSection}>
-        <TouchableOpacity style={styles.backButton} onPress={() => BackHandler.exitApp()}>
-          <Ionicons name="chevron-back" size={30} color="#FFFFFF" />
-        </TouchableOpacity>
-        <ThemedText type="title" style={styles.title}>{t('welcome')} Back</ThemedText>
-        <ThemedText type="subtitle" style={styles.subtitle}>{t('login_subtitle')}</ThemedText>
-      </View>
-      {/* White Card */}
-      <View style={styles.card}>
-        <Controller
-          control={control}
-          name="phoneNumber"
-          rules={{
-            required: t('phone_required'),
-            minLength: { value: 8, message: t('phone_digits') }, // Flexible minLength
-          }}
-          render={({ field: { onChange, value }, fieldState: { error } }) => (
-            <>
-              <ThemedText style={styles.label}>{t('whatsapp_number')}</ThemedText>
-              <View style={[styles.phoneContainer, error && styles.inputError]}>
-                <TouchableOpacity
-                  style={styles.countryCodeBox}
-                  onPress={() => setShowPicker(true)}
-                >
-                  <ThemedText style={styles.countryCodeText}>
-                    {country ? `+${country.callingCode[0]}` : countryCode}
-                  </ThemedText>
-                  <Ionicons name="chevron-down" size={16} color="#6c63ff" style={{ marginLeft: 2 }} />
-                </TouchableOpacity>
-                {showPicker && (
-  <View style={styles.overlay}>
-    <View style={styles.pickerContainer}>
-      <CountryPicker
-        withFilter
-        withFlag
-        withCallingCode
-        withCountryNameButton={false}
-        withEmoji
-        onSelect={(country) => {
-          setCountryCode('+' + country.callingCode[0]);
-          setCca2(country.cca2);
-          setCountry(country);
-          setShowPicker(false);
-        }}
-        visible
-        onClose={() => setShowPicker(false)}
-        countryCode={cca2}
-        theme={{
-          onBackgroundTextColor: '#222',
-          backgroundColor: '#fff',
-          primaryColor: '#6c63ff',
-        }}
-      />
-    </View>
-  </View>
-)}
-
-                <TextInput
-                  style={styles.phoneInput}
-                  placeholder={t('enter_phone')}
-                  placeholderTextColor="#b3aefc"
-                  keyboardType="phone-pad"
-                  maxLength={15} // Allow flexibility for different country codes
-                  onChangeText={text => {
-                    setAccountNotFound(false);
-                    onChange(text);
-                  }}
-                  value={value}
-                />
-              </View>
-              {error?.message && <ThemedText style={styles.errorText}>{error.message}</ThemedText>}
-            </>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={{ flex: 1, backgroundColor: '#6c63ff' }}>
+        {/* Top Purple Header */}
+        <View style={styles.topSection}>
+          {Platform.OS === 'android' && (
+            <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+              <Ionicons name="chevron-back" size={30} color="#FFFFFF" />
+            </TouchableOpacity>
           )}
-        />
-        {/* Error messages: Only show one at a time */}
-        {errors.phoneNumber ? (
-          <ThemedText style={{ color: 'red', textAlign: 'center', marginBottom: 0 }}></ThemedText>
-        ) : accountNotFound ? (
-          <ThemedText style={{ color: 'red', textAlign: 'left', marginBottom: 10 }}>
-            {t('account_exists')}. {t('continue_to')}{' '}
-            <ThemedText
-              style={{ color: '#e53935', fontWeight: 'bold', textDecorationLine: 'underline' }}
-              onPress={() => router.push('/register')}
-            >
-              {t('register')}
-            </ThemedText>
-            .
-          </ThemedText>
-        ) : null}
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleSubmit(handleLogin)}
-          disabled={isPending}
+          <ThemedText type="title" style={styles.title}>{t('welcome')}</ThemedText>
+          <ThemedText type="subtitle" style={styles.subtitle}>{t('login_subtitle')}</ThemedText>
+        </View>
+        {/* White Card */}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         >
-          {isPending ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <ThemedText style={styles.buttonText}>{t('login')}</ThemedText>
-          )}
-        </TouchableOpacity>
-        <ThemedText style={styles.bottomText}>
-          {t('dont_have_account')}{' '}
-          <ThemedText
-            style={styles.link}
-            onPress={() => router.push('/register')}
-          >
-            {t('register')}
-          </ThemedText>
-        </ThemedText>
+          <View style={styles.card}>
+            <Controller
+              control={control}
+              name="phoneNumber"
+              rules={{
+                required: t('phone_required'),
+                minLength: { value: 8, message: t('phone_digits') },
+              }}
+              render={({ field: { onChange, value }, fieldState: { error } }) => (
+                <>
+                  <ThemedText style={styles.label}>{t('whatsapp_number')}</ThemedText>
+                  <View style={[styles.phoneContainer, error && styles.inputError]}>
+                    <TouchableOpacity
+                      style={styles.countryCodeBox}
+                      onPress={() => setShowPicker(true)}
+                    >
+                      <ThemedText style={styles.countryCodeText}>
+                        {country ? `+${country.callingCode[0]}` : countryCode}
+                      </ThemedText>
+                      <Ionicons name="chevron-down" size={16} color="#6c63ff" style={{ marginLeft: 2 }} />
+                    </TouchableOpacity>
+                    <CountryPicker
+                      withFilter
+                      withFlag
+                      withCallingCode
+                      withCountryNameButton={false}
+                      withEmoji
+                      onSelect={(country) => {
+                        setCountryCode('+' + country.callingCode[0]);
+                        setCca2(country.cca2);
+                        setCountry(country);
+                        setShowPicker(false);
+                      }}
+                      visible={showPicker}
+                      onClose={() => setShowPicker(false)}
+                      countryCode={cca2}
+                      theme={{
+                        onBackgroundTextColor: '#222',
+                        backgroundColor: '#fff',
+                        primaryColor: '#6c63ff',
+                      }}
+                    />
+                    <TextInput
+                      style={styles.phoneInput}
+                      placeholder={t('enter_phone')}
+                      placeholderTextColor="#b3aefc"
+                      keyboardType="phone-pad"
+                      maxLength={15}
+                      onChangeText={text => {
+                        setAccountNotFound(false);
+                        onChange(text);
+                      }}
+                      value={value}
+                    />
+                  </View>
+                  {error?.message && <ThemedText style={styles.errorText}>{error.message}</ThemedText>}
+                </>
+              )}
+            />
+            {errors.phoneNumber ? (
+              <ThemedText style={{ color: 'red', textAlign: 'center', marginBottom: 0 }}></ThemedText>
+            ) : accountNotFound ? (
+              <ThemedText style={{ color: 'red', textAlign: 'left', marginBottom: 10 }}>
+                {t('account_exists')}. {t('continue_to')}{' '}
+                <ThemedText
+                  style={{ color: '#e53935', fontWeight: 'bold', textDecorationLine: 'underline' }}
+                  onPress={() => router.push('/register')}
+                >
+                  {t('Register')}
+                </ThemedText>
+                .
+              </ThemedText>
+            ) : null}
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleSubmit(handleLogin)}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <ThemedText style={styles.buttonText}>{t('login')}</ThemedText>
+              )}
+            </TouchableOpacity>
+            <ThemedText style={styles.bottomText}>
+              {t('dont_have_account')}{' '}
+              <ThemedText
+                style={styles.link}
+                onPress={() => router.push('/register')}
+              >
+                {t('Register')}
+              </ThemedText>
+            </ThemedText>
+          </View>
+        </KeyboardAvoidingView>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    position: 'absolute',
-    top: hp('30%'),
-    left: wp('5%'),
-    right: wp('5%'),
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 99,
-  },
-  
-  pickerContainer: {
-    width: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-    padding: 10,
-  },
-  
   topSection: {
     backgroundColor: '#6c63ff',
     borderBottomLeftRadius: 0,
@@ -209,6 +195,8 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     color: '#fff',
+    borderTopWidth: 10,
+    borderTopColor: '#6c63ff',
     marginTop: 50,
     marginBottom: 15,
     textAlign: 'center',
@@ -228,8 +216,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 0,
     marginTop: 0,
     padding: 24,
-    paddingTop: 100,
-    paddingBottom: 200,
+    paddingTop: 30,
+    paddingBottom: 500,
     shadowColor: '#000',
   },
   label: {
@@ -268,8 +256,8 @@ const styles = StyleSheet.create({
   phoneInput: {
     flex: 1,
     paddingVertical: 8,
-    paddingHorizontal: 12,
-    fontSize: 16,
+    paddingHorizontal: 0,
+    fontSize: 14,
     color: '#222',
     backgroundColor: '#fff',
   },
@@ -292,11 +280,13 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontWeight: '700',
+    borderTopWidth:5,
+    borderTopColor: '#6c63ff',
     fontSize: 20,
   },
   bottomText: {
     textAlign: 'center',
-    marginTop: 10,
+    marginTop: 1,
     fontSize: 15,
     color: '#222',
   },

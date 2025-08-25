@@ -4,7 +4,7 @@ import axios, { AxiosError } from "axios";
 import { API_ENDPOINTS } from "../config/api";
 
 type AuthParams = {
-  phoneNumber: string;
+  phoneNumber: string; // Should be full phone number with country code (e.g., "+916305517488")
   fullname?: string;
   age?: string;
   gender?: string;
@@ -20,11 +20,11 @@ export function useAuthMutation(mode: AuthMode) {
       let data = {}
       if(mode === "login"){
          data = {
-          "phone_number": `+91${params.phoneNumber}`
+          "phone_number": params.phoneNumber // Expects full phone number with country code
          }
       }else{
          data = {
-          "phone_number": `+91${params.phoneNumber}`,
+          "phone_number": params.phoneNumber, // Expects full phone number with country code
           "full_name": params.fullname,
           "age": parseInt(params.age || "0"),
           "gender": params.gender,
@@ -45,24 +45,20 @@ export function useAuthMutation(mode: AuthMode) {
 }
 
 type OTPParams = {
-  phone_number: string;
+  phone_number: string; // Should be full phone number with country code (e.g., "+916305517488")
   otp_code: string;
 }
 
 export function useOTPAuthMutation(mode: AuthMode) {
   return useMutation({
     mutationFn: async (params: OTPParams) => {
-      // Remove any existing +91 prefix and add it back to ensure consistent format
-      const cleanPhoneNumber = params.phone_number.replace(/^\+91/, '');
-      const formattedPhoneNumber = `+${cleanPhoneNumber}`;
-
       console.log('OTP Verification Params:', {
-        phone_number: formattedPhoneNumber,
+        phone_number: params.phone_number,
         otp_code: params.otp_code
       });
 
       const response = await axios.post(API_ENDPOINTS.VERIFY_OTP, {
-        phone_number: formattedPhoneNumber,
+        phone_number: params.phone_number, // Use phone number as provided
         otp_code: params.otp_code
       });
       return response.data; 

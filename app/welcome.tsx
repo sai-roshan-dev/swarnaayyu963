@@ -1,27 +1,29 @@
 import { View, Text, StyleSheet } from 'react-native';
+import { useLanguage } from '@/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons'; 
 import React, { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuthRedirect } from '@/hooks/useAuthCheck';
 
 export default function WelcomeScreen() {
-      const router = useRouter();
-      useAuthRedirect()
+  const router = useRouter();
+  useAuthRedirect();
+  const { t } = useLanguage();
 
-     useEffect(() => {
-        const timer = setTimeout(() => {
-          router.replace('/'); 
-        }, 2000);
-    
-        return () => clearTimeout(timer);
-      }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.replace('/');
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.iconWrapper}>
         <Ionicons name="checkmark" size={36} color="#fff" />
       </View>
-      <Text style={styles.title}>Welcome Back!</Text>
-      <Text style={styles.subtitle}>You're successfully logged in</Text>
+      <Text style={styles.title}>{t('welcome')}</Text>
+      <Text style={styles.subtitle}>{t('login_success')}</Text>
     </View>
   );
 }

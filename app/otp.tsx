@@ -1,28 +1,28 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Platform,
   Alert,
   ActivityIndicator,
   Keyboard,
+  Image,
 } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { useOTPAuthMutation } from '@/hooks/useAuthMutation';
-import { useAuthMutation } from '../hooks/useAuthMutation';
+import { useOTPAuthMutation, useAuthMutation } from '@/hooks/useAuthMutation';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '@/context/LanguageContext';
 import { ThemedText } from '@/components/ThemedText';
+
 
 export default function OtpScreen() {
   const [otp, setOtp] = useState<string[]>(['', '', '', '']);
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const { phoneNumber } = useLocalSearchParams();
+  const phone = Array.isArray(phoneNumber) ? phoneNumber[0] : phoneNumber;
   const router = useRouter();
   const { mutate } = useOTPAuthMutation('login');
   const { mutate: resendOtp, isPending: isResending } = useAuthMutation('login');
@@ -30,39 +30,31 @@ export default function OtpScreen() {
 
   const [loginType, setLoginTypeUse] = useState('');
 
+  console.log('phoneNumber in OTP:', phoneNumber); // Debug
+  console.log('Normalized phone:', phone); // Debug
+
   const setLoginType = async () => {
-    const loginType = await SecureStore.getItemAsync('loginType');
-    if (loginType) {
-      setLoginTypeUse(loginType);
-    }
+    const type = await SecureStore.getItemAsync('loginType');
+    if (type) setLoginTypeUse(type);
   };
 
   useEffect(() => {
     setLoginType();
   }, []);
 
-  const fullPhone = phoneNumber?.toString().startsWith('+91')
-    ? phoneNumber
-    : `+91${phoneNumber}`;
-
   const handleChange = (text: string, index: number) => {
     if (/^\d$/.test(text)) {
       const newOtp = [...otp];
       newOtp[index] = text;
       setOtp(newOtp);
-
-      if (index < otp.length - 1) {
-        inputRefs.current[index + 1]?.focus();
-      } else {
-        Keyboard.dismiss();
-      }
+      if (index < otp.length - 1) inputRefs.current[index + 1]?.focus();
+      else Keyboard.dismiss();
     }
   };
 
   const handleKeyPress = (e: any, index: number) => {
     if (e.nativeEvent.key === 'Backspace') {
       const newOtp = [...otp];
-
       if (otp[index]) {
         newOtp[index] = '';
         setOtp(newOtp);
@@ -76,36 +68,33 @@ export default function OtpScreen() {
 
   const handleSubmit = () => {
     const code = otp.join('');
-    console.log('OTP Entered:', code);
     SecureStore.setItemAsync('isOtpVerified', code);
 
-    const cleanPhoneNumber = phoneNumber?.toString().replace(/^\+91/, '');
-
     const data = {
-      phone_number: `+91${cleanPhoneNumber}`,
+      phone_number: phone, // Use normalized phone
       otp_code: code,
     };
+
+    console.log('Sending to mutate:', data); // Debug
+
     mutate(data, {
-      onSuccess: async (data) => {
+      onSuccess: async (res) => {
         try {
           await Promise.all([
-            SecureStore.setItemAsync('token', data.access_token),
-            SecureStore.setItemAsync('phone_number', data.user.phone_number),
-            SecureStore.setItemAsync('name', data.user.full_name),
+            SecureStore.setItemAsync('token', res.access_token),
+            SecureStore.setItemAsync('phone_number', res.user.phone_number),
+            SecureStore.setItemAsync('name', res.user.full_name),
             SecureStore.setItemAsync('isLoggedIn', 'true'),
           ]);
-
-          console.log('Navigation to main screen...');
           router.replace('/(app)');
         } catch (error) {
-          console.error('Error storing data:', error);
           Alert.alert('Error', 'Failed to complete login process');
         }
       },
       onError: (error: any) => {
-        console.error('OTP verification error:', error);
-        if (!error.response.data.exists) {
-          Alert.alert(error.response.data.message);
+        console.log('Mutation error:', error.response?.data, error.message); // Debug
+        if (!error.response?.data?.exists) {
+          Alert.alert(error.response?.data?.message || 'Invalid OTP');
         } else {
           Alert.alert('Something went wrong!!');
         }
@@ -114,15 +103,15 @@ export default function OtpScreen() {
   };
 
   const handleResendOtp = () => {
-    const phone = Array.isArray(phoneNumber) ? phoneNumber[0] : phoneNumber;
-    const rawPhone = phone.replace(/^\+?91/, '');
+    console.log('Resending OTP for:', phone); // Debug
     resendOtp(
-      { phoneNumber: rawPhone },
+      { phoneNumber: phone }, // Use normalized phone
       {
         onSuccess: () => {
           Alert.alert('OTP resent!', 'A new OTP has been sent to your phone.');
         },
-        onError: () => {
+        onError: (error: any) => {
+          console.log('Resend OTP error:', error.response?.data, error.message); // Debug
           Alert.alert('Error', 'Failed to resend OTP. Please try again.');
         },
       }
@@ -131,18 +120,31 @@ export default function OtpScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Top Purple Header */}
-      <View style={styles.topSection}>
+      {/* Header with back button */}
+      <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={30} color="#FFFFFF" />
+          <Ionicons name="arrow-back" size={24} color="#000000" />
         </TouchableOpacity>
-        <ThemedText type="title" style={styles.title}>{t('enter_otp')}</ThemedText>
-        <ThemedText type="subtitle" style={styles.subtitle}>
-          {t('otp_sent_to')} {phoneNumber}
-        </ThemedText>
       </View>
-      {/* White Card */}
-      <View style={styles.card}>
+
+      {/* Main content */}
+      <View style={styles.content}>
+        {/* Security icon */}
+        <View style={styles.iconContainer}>
+          <View style={styles.securityIcon}>
+            <Image source={require('@/assets/images/otp-icon.png')} style={styles.securityIconImage} />
+          </View>
+        </View>
+
+        {/* Title */}
+        <ThemedText type="title" style={styles.title}>{t('enter_otp')}</ThemedText>
+
+        {/* Subtitle */}
+        <ThemedText type="subtitle" style={styles.subtitle}>
+          Please enter the verification code sent to {phone}
+        </ThemedText>
+
+        {/* OTP Input Fields */}
         <View style={styles.otpContainer}>
           {otp.map((digit, index) => (
             <TextInput
@@ -159,122 +161,151 @@ export default function OtpScreen() {
           ))}
         </View>
 
+        {/* Verify Button */}
         <TouchableOpacity
-          style={[
-            styles.button,
-            otp.includes('') && { backgroundColor: '#ddd' },
-          ]}
+          style={[styles.verifyButton, otp.includes('') && styles.verifyButtonDisabled]}
           disabled={otp.includes('')}
           onPress={handleSubmit}
         >
           {otp.includes('') ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <ThemedText style={styles.buttonText}>{t('continue')}</ThemedText>
+            <ThemedText style={styles.verifyButtonText}>Verify</ThemedText>
           )}
         </TouchableOpacity>
 
+        {/* Resend OTP */}
+        <View style={styles.resendContainer}>
         <ThemedText style={styles.resendText}>
-          {t('didnt_receive_code')}{' '}
+        Didn’t receive the OTP?{' '}
           <ThemedText
             style={styles.resendLink}
             onPress={isResending ? undefined : handleResendOtp}
           >
-            {isResending ? t('resending') : t('resend_code')}
+              {isResending ? t('resending') : 'Resend OTP'}
+            </ThemedText>
           </ThemedText>
-        </ThemedText>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#6c63ff',
+  container: { 
+    flex: 1, 
+    backgroundColor: '#ffffff' 
   },
-  topSection: {
-    backgroundColor: '#6c63ff',
+  header: {
     paddingTop: 48,
-    paddingBottom: 100,
-    alignItems: 'center',
-    position: 'relative',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 40,
+  },
+  iconContainer: {
+    marginBottom: 32,
+    alignItems: 'center',
+  },
+  securityIcon: {
+    position: 'relative',
+    width: 80,
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  securityIconImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 40, // Adjust as needed for circular image
+  },
+  circularArrows: {
     position: 'absolute',
-    left: 20,
-    top: 21,
-    zIndex: 2,
+    top: -8,
+    right: -8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#fff',
-    marginTop: 50,
-    marginBottom: 15,
+    color: '#6c63ff',
+    marginBottom: 16,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    fontWeight: 500,
-    color: '#e6e6fa',
+    fontWeight: '400',
+    color: '#333333',
     textAlign: 'center',
-    marginBottom: 0,
+    marginBottom: 40,
     lineHeight: 24,
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    marginHorizontal: 0,
-    marginTop: 0,
-    padding: 24,
-    paddingTop: 100,
-    paddingBottom: 200,
-    shadowColor: '#000',
   },
   otpContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: hp('4%'),
+    marginBottom: 40,
+    width: '100%',
+    paddingHorizontal: 20,
   },
   otpInput: {
-    width: wp('12%'),
-    height: wp('14%'),
-    borderWidth: 1.5,
-    borderColor: '#a99af7',
-    borderRadius: wp('2%'),
+    width: 60,
+    height: 60,
+    borderWidth: 1,
+    borderColor: '#000000',
+    borderRadius: 8,
     textAlign: 'center',
-    fontSize: wp('6%'),
-    color: '#000',
+    fontSize: 24,
+    color: '#000000',
+    backgroundColor: '#ffffff',
   },
-  button: {
+  verifyButton: {
     backgroundColor: '#6c63ff',
-    paddingVertical: hp('1.8%'),
+    paddingVertical: 16,
+    paddingHorizontal: 32,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 8,
+    marginBottom: 32,
+    width: '100%',
     shadowColor: '#6c63ff',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 4.65,
+    shadowRadius: 8,
     elevation: 8,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: wp('4.5%'),
+  verifyButtonDisabled: {
+    backgroundColor: '#cccccc',
+  },
+  verifyButtonText: {
+    color: '#ffffff',
+    fontSize: 18,
     fontWeight: '700',
+  },
+  resendContainer: {
+    alignItems: 'center',
   },
   resendText: {
     textAlign: 'center',
-    marginTop: hp('3%'),
-    fontSize: wp('4%'),
-    color: '#222',
+    fontSize: 16,
+    color: '#333333',
   },
   resendLink: {
     color: '#6c63ff',
-    fontWeight: '700',
+    fontWeight: '600',
     textDecorationLine: 'underline',
-  },
+  }
 });

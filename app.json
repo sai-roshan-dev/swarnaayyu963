@@ -2,20 +2,16 @@
   "expo": {
     "name": "Aayu",
     "slug": "aayu",
-    "version": "3.1.0",
+    "version": "4.2.0",
     "orientation": "portrait",
     "scheme": "Aayu",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/images/aayu.png",
-      "resizeMode": "cover",
-      "backgroundColor": "#ffffff"
-    },
+
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.sai.swarnaayu",
-      "buildNumber": "3.1.0"
+      "buildNumber": "10"
     },
     "android": {
       "adaptiveIcon": {
@@ -38,7 +34,7 @@
     "owner": "balaji_naga",
     "extra": {
       "eas": {
-             "projectId": "a5caea60-ffa9-4dbb-87fd-2be7b6670ad1"
+                  "projectId": "f97393cf-429a-45e2-9585-af03565fd292"
       }
     }
   }

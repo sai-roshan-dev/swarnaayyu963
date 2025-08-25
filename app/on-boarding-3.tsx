@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useLanguage } from '@/context/LanguageContext';
 
 export const screenOptions = {
   headerShown: false,
@@ -9,14 +10,13 @@ export const screenOptions = {
 
 export default function OnBoarding3() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <View style={styles.container}>
       <View style={{ flex: 1 }} />
-      <Text style={styles.title}>Your Wellness Buddy</Text>
-      <Text style={styles.subtitle}>
-        We gently guide your health journey — like a caring buddy.
-      </Text>
+      <Text style={styles.title}>{t('onboarding.title_3')}</Text>
+      <Text style={styles.subtitle}>{t('onboarding.desc_3')}</Text>
       <Image
         source={require('../assets/images/onboarding3.png')}
         style={styles.image}
@@ -31,8 +31,9 @@ export default function OnBoarding3() {
         </View>
       </View>
       <TouchableOpacity style={styles.button} onPress={() => router.replace('/login')}>
-        <Text style={styles.buttonText}>Get Started</Text>
+        <Text style={styles.buttonText}>{t('onboarding.next')}</Text>
       </TouchableOpacity>
+      
     </View>
   );
 }
@@ -60,11 +61,23 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 8,
   },
   buttonText: {
     color: '#fff',
     fontSize: 20,
     fontWeight: '600',
   },
-}); 
+  skipButton: {
+    width: '100%',
+    backgroundColor: 'transparent',
+    paddingVertical: 18,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  skipButtonText: {
+    color: '#4F46E5',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+});

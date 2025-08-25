@@ -291,9 +291,9 @@ const ChatScreen = () => {
     <View style={styles.container}>
       {/* Top Navbar */}
       <View style={styles.navbar}>
-        <TouchableOpacity onPress={() => router.push('/')}> 
+      <TouchableOpacity onPress={() => router.back()}> 
           <Ionicons name="arrow-back" size={28} color="#222" />
-        </TouchableOpacity>
+      </TouchableOpacity>
         <ThemedText type="title" style={styles.navbarTitle}>{t('history')}</ThemedText>
         <View style={{ width: 28 }} />
       </View>

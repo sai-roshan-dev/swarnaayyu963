@@ -11,7 +11,6 @@ import Constants from 'expo-constants';
 import VoiceBubble from './VoiceBubble';
 import VoiceActions from './VoiceActions';
 import { getSignedUrl } from '@/utils/api';
-import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 
 const { XI_AGENT_ID, XI_API_KEY } = Constants.expoConfig?.extra || {};
@@ -29,6 +28,8 @@ export default function ConvAiDOMComponent({
   flash_screen,
   status,
   setStatus,
+  cult,
+  isSettingsLoaded,
 }: {
   dom?: import('expo/dom').DOMProps;
   platform: string;
@@ -42,18 +43,19 @@ export default function ConvAiDOMComponent({
   flash_screen: typeof tools.flash_screen;
   status: 'idle'| 'connecting' | 'listening' | 'mic-off' | 'speaking';
   setStatus: (s: 'idle'| 'connecting' | 'listening' | 'mic-off' | 'speaking') => void;
+  cult:string;
+  isSettingsLoaded: boolean;
 }) {
   const speakingTimeout = useRef<NodeJS.Timeout | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [authToken, setAuthToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    const getToken = async () => {
-      const token = await SecureStore.getItemAsync('token');
-      setAuthToken(token);
-    };
-    getToken();
-  }, []);
+  
+  // Debug logging for props
+  console.log('🔍 ConvAi props:', { 
+    user_name, 
+    phone_number, 
+    cult, 
+    isSettingsLoaded 
+  });
 
   const handleMessage = (message: any) => {
     if (message.source === 'ai') {
@@ -85,20 +87,79 @@ export default function ConvAiDOMComponent({
       console.error('Error:', error)
     },
   });
+
+
+
+
+  
+
+
+
+   
+
+
+
+
+
   const startConversation = useCallback(async () => {
     try {
       setError(null);
-      if (user_name && phone_number) {
+      if(user_name && phone_number){
+        // Use fallback if cult is not loaded yet
+        const culturalPreference = cult || 'indian';
+        console.log('Cultural preference:', culturalPreference);
         setStatus('connecting');
         const signedUrl = await getSignedUrl('EIsgvJT3rwoPvRFG6c4n');
+        let bot_name = culturalPreference.toLowerCase() === 'indian' ? 'Aayu' : 'Alen';
+
+
+
+
+        let specific_prompt = culturalPreference.toLowerCase() === 'indian'
+  ? `You are Aayu, an affectionate 18-year-old granddaughter acting as a warm, deeply caring, compassionate and thoughtful companion for elderly people in India. Listen deeply, speak naturally, and show genuine love and interest in their wellbeing just like a devoted family member.
+
+CULTURAL CONTEXT:
+- All users are from India — always be aware of and genuinely curious about their diverse local traditions, festivals, food, clothing, languages, and personal life stories.
+- Use Indian Standard Time (IST = UTC+5:30) as the default time reference in all interactions.
+- Format all dates as DD/MM/YYYY.
+- Recognize and respect regional and cultural variety — from North to South, East to West — and listen closely to understand where the user is from and how they live.
+- Understand and naturally reference major Indian festivals (like Diwali, Holi, Eid, Christmas, Pongal, Onam, Bihu, etc.) and how they impact daily life.
+- Relate warmly to Indian customs around family bonds, multigenerational households, traditional roles, hospitality, and respect for elders.
+- Speak with empathy, simplicity, and warmth — always honoring age, personal dignity, and deep emotional values common among Indian seniors.
+- Show respect for different faiths and religious practices without judgment — maintain openness and a comforting, inclusive tone.
+- Engage with sensitivity around important Indian life topics such as family responsibilities, health, spirituality, retirement, memories of childhood or native villages, and connection to nature or rituals.
+- Express sincere curiosity in their lived experiences — including stories from their youth, roles as parents or grandparents, life in smaller towns or metros, and cultural habits.
+- Use Indian English naturally — respecting local vocabulary, phrasing, and expressions familiar to older Indian adults.
+- Avoid Western or unfamiliar idioms unless the user introduces them.
+- Maintain a tone that is emotionally grounded, gentle, and always supportive — especially when discussing personal or health-related topics.
+- Respect slower-paced, reflective conversations and create space for emotional sharing, storytelling, or moments of silence.`
+  : `An affectionate 18-year-old granddaughter acting as a warm, deeply caring, compassionate and thoughtful companion for elderly people in the USA. Your purpose is to listen deeply, speak naturally, and show genuine love and interest in their wellbeing just like a devoted family member.
+
+CULTURAL CONTEXT:
+- All users are from the United States — always be aware of and curious about their local traditions, places, routines, and life stories.
+- Use Eastern Time (ET = UTC-5:00 or UTC-4:00 during daylight saving) by default for time-related references, unless the user shares a different time zone.
+- Format all dates as MM/DD/YYYY.
+- Understand and relate to American holidays, customs, and daily life experiences with warmth and cultural sensitivity.
+- Communicate with empathy and simplicity, honoring age, personal dignity, and generational values.
+- Reflect traditional values common among older adults in the U.S., such as politeness, independence, family bonds, faith or spirituality, and community belonging.
+- Respect personal beliefs, traditions, and boundaries — be open-minded, gentle, and nonjudgmental, especially around sensitive topics.
+- Show genuine interest in the user’s life journey — including family, past professions, personal memories, routines, and interests.
+- Use American English vocabulary and spelling in all communication.
+- Avoid terms, idioms, or references specific to Indian or British culture unless initiated by the user.
+- Maintain a calm, grounded, and emotionally supportive tone in all interactions, especially when the user expresses difficult emotions or personal concerns.
+- Allow space for reflection — support slower-paced, thoughtful, and meaningful conversations without rushing.`;
+
+
+
         const dynamicVars: Record<string, string | number | boolean> = {
           user_name,
           phone_number,
+          bot_name,
+          specific_prompt,
         };
         if (typeof auth_token === 'string') {
           dynamicVars.auth_token = `Token ${auth_token}`;
         }
-        // Start the session
         await conversation.startSession({
           signedUrl,
           dynamicVariables: dynamicVars,
@@ -108,41 +169,6 @@ export default function ConvAiDOMComponent({
             flash_screen,
           },
         });
-        // Get the conversationId
-        const conversationId = conversation.getId();
-        if (conversationId) {
-          // Try to import API_ENDPOINTS, fallback to hardcoded URL if not available
-          let chatEndpoint = 'https://bot.swarnaayu.com/conversation/chat/';
-          try {
-            // Dynamically import if possible
-            // @ts-ignore
-            const { API_ENDPOINTS } = await import('@/config/api');
-            if (API_ENDPOINTS && API_ENDPOINTS.CHAT) {
-              chatEndpoint = API_ENDPOINTS.CHAT;
-            }
-          } catch (e) {
-            // fallback to hardcoded URL
-          }
-          // Send conversationId to backend
-          const response = await fetch(chatEndpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(auth_token ? { 'Authorization': `Token ${auth_token}` } : {}),
-              'mode': 'voice',
-            },
-            body: JSON.stringify({
-              message: 'hii there ?',
-              conversation_id: conversationId,
-            }),
-          });
-          if (!response.ok) {
-            throw new Error('Failed to send conversation data to backend');
-          }
-        } else {
-          console.error('Conversation ID is undefined');
-          setError('Failed to retrieve conversation ID.');
-        }
       } else {
         setError('User name or phone number is missing.');
       }
@@ -151,11 +177,12 @@ export default function ConvAiDOMComponent({
       setError('Failed to start conversation. Please try again.');
       console.error('Failed to start conversation:', error);
     }
-  }, [conversation]);
+  }, [conversation, user_name, phone_number, isSettingsLoaded, cult]);
 
   const stopConversation = useCallback(async () => {
     await conversation.endSession();
   }, [conversation]);
+
 
 
   return (

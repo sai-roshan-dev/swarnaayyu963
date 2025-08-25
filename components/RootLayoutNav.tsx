@@ -28,15 +28,12 @@ export default function RootLayoutNav() {
     const prepare = async () => {
       await SplashScreen.preventAutoHideAsync();
       if (!loaded) return;
-      if (!isAuthenticated) {
-        router.replace('/on-boarding');
-      } else {
-        router.replace('/');
-      }
+      // Start with splash screen for all users
+      router.replace('/splash-screen' as any);
       await SplashScreen.hideAsync();
     };
     prepare();
-  }, [loaded, isAuthenticated]);
+  }, [loaded]);
 
   if (!loaded) {
     return null;
@@ -47,6 +44,9 @@ export default function RootLayoutNav() {
       <SafeAreaView style={styles.safeArea}>
         <Stack>
           <Stack.Screen name="+not-found" />
+          <Stack.Screen name="splash-screen" options={{ headerShown: false }} />
+          <Stack.Screen name="font-size-onboarding" options={{ headerShown: false }} />
+          <Stack.Screen name="language-onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="register" options={{ headerShown: false }} />
           <Stack.Screen name="otp" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ headerShown: false }} />

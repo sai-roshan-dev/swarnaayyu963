@@ -12,14 +12,24 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 // Translation data
-const translations: Record<Language, Record<string, string>> = {
+type TranslationValue = string | { [key: string]: TranslationValue };
+type Translations = Record<Language, { [key: string]: TranslationValue }>;
+
+const translations: Translations = {
   English: {
+    voice: {
+      connecting: 'Connecting...',
+      listening: 'Listening...',
+      speaking: 'Speaking...',
+      tap_to_speak: 'Tap to speak',
+      microphone_off: 'Microphone Off',
+    },
     // Settings
     'settings': 'Settings',
     'account': 'Account',
     'whatsapp_number': 'WhatsApp Number',
     'edit_profile': 'Edit Profile',
-    'my_privacy': 'My Privacy',
+    'my_privacy': 'Privacy Policy',
     'voice_audio': 'Voice & Audio',
     'microphone_access': 'Microphone Access',
     'allowed': 'Allowed',
@@ -38,6 +48,9 @@ const translations: Record<Language, Record<string, string>> = {
     'confirm_logout': 'Confirm Logout',
     'logout_message': 'Are you sure you want to log out?',
     'cancel': 'Cancel',
+    'accent': 'Accent',
+    'culture': 'Culture',
+    'cultural_preference': 'Cultural Preferences',
     // History
     'history': 'History',
     'type_message': 'Type a message...',
@@ -59,7 +72,7 @@ const translations: Record<Language, Record<string, string>> = {
     'gender': 'Gender',
     'country': 'Country',
     'select_country': 'Select your country',
-    'account_exists': 'Account don"t Already Exists',
+    'account_exists': 'Account doesn`t Exists',
     'registering': 'Registering...',
     'otp_resent': 'A new OTP has been sent to your phone.',
     'otp_resend_failed': 'Failed to resend OTP. Please try again.',
@@ -77,13 +90,13 @@ const translations: Record<Language, Record<string, string>> = {
     'profile': 'Profile',
     // Auth
     'login': 'Login',
-    'register': 'Register',
+    'Register': 'Register',
     'welcome': 'Welcome',
     'login_subtitle': 'Login to continue your journey with Aayu.',
     'is_required': 'is required',
     'must_be_digits': 'must be at least 10 digits',
     'continue_to': 'Continue to',
-    'enter_phone': 'Enter your phone number',
+    'enter_phone': 'Enter your WhatsApp Number',
     'phone_required': 'Phone number is required',
     'phone_digits': 'Phone number must be at least 10 digits',
     'phone_number': 'Phone Number',
@@ -95,7 +108,7 @@ const translations: Record<Language, Record<string, string>> = {
     'sign_up': 'Sign Up',
     'sign_in': 'Sign In',
     'otp_verification': 'OTP Verification',
-    'enter_otp': 'Enter OTP sent to your phone',
+    'enter_otp': 'Enter OTP',
     'resend_otp': 'Resend OTP',
     'verify': 'Verify',
     'account_created': 'Account Created',
@@ -107,16 +120,18 @@ const translations: Record<Language, Record<string, string>> = {
     'connecting': 'Connecting',
     'idle': 'Idle',
     'mic_off': 'Mic Off',
-    // Onboarding
-    'onboarding_title_1': 'Welcome to Aayu',
-    'onboarding_title_2': 'AI Voice Assistant',
-    'onboarding_title_3': 'Get Started',
-    'onboarding_desc_1': 'Your personal AI voice assistant for everyday tasks',
-    'onboarding_desc_2': 'Natural conversations with advanced AI technology',
-    'onboarding_desc_3': 'Start your journey with Aayu today',
-    'skip': 'Skip',
-    'next': 'Next',
-    'get_started': 'Get Started',
+    // Onboarding (nested)
+    onboarding: {
+      title_1: 'Welcome to Aayu',
+      desc_1: 'Your personal AI voice assistant for everyday tasks',
+      title_2: 'AI Voice Assistant',
+      desc_2: 'Natural conversations with advanced AI technology',
+      title_3: 'Get Started',
+      desc_3: 'Start your journey with Aayu today',
+      skip: 'Skip',
+      next: 'Next',
+      get_started: 'Get Started',
+    },
     // About
     'about': 'About',
     'version': 'Version',
@@ -131,6 +146,7 @@ const translations: Record<Language, Record<string, string>> = {
     'invalid_phone': 'Invalid phone number',
     'invalid_otp': 'Invalid OTP',
     'something_went_wrong': 'Something went wrong',
+    "welcome_intro": "Welcome to Aayu! Your privacy is important to us. This Privacy Policy explains how we collect, use, and protect your personal data when you use our services.",
     'data_sharing_protection': 'Data Sharing & Protection',
     'no_sell_data': 'We do not sell your personal data.',
     'share_with_trusted': 'We may share data with trusted third party providers for essential services (e.g cloud storage).',
@@ -141,8 +157,42 @@ const translations: Record<Language, Record<string, string>> = {
     'changes_policy': 'Changes to This Policy',
     'policy_update_note': 'We may update this Privacy Policy as needed. Any changes will be posted here with an update date.',
     'policy_questions': 'For questions about this policy, contact us at',
+    "info_we_collect": "Information We Collect",
+  "personal_info": "Personal Information",
+  "personal_info_desc": "Name, email, and other details you provide when signing up.",
+  "usage_data": "Usage Data",
+  "usage_data_desc": "Interactions with Aayu, including voice inputs, messages, preferences, and device information.",
+  "third_party_data": "Third-Party Data",
+  "third_party_data_desc": "If you connect external services, we may access relevant data as permitted.",
+  "how_we_use_info": "How We Use Your Information",
+  "provide_personalize_app": "Provide, personalize, and improve the app experience.",
+  "help_reminders_conversations": "Help you with reminders, conversations, and useful daily interactions.",
+  "support_secure_experience": "Support your requests and keep your experience secure.",
+  "analyze_usage_patterns": "Analyze usage patterns to improve app performance and reliability.",
+  "last_updated": "Last Updated: August 09, 2025",
+  "cannot_open_email": "Unable to open email client.",
+    // Register
+    register: {
+      prompt_fullname: "Great to see you!\nWhat’s your name?",
+      placeholder_fullname: "Type your name...",
+      prompt_age: "Awesome!\nWhat’s your age?",
+      placeholder_age: "Type your age...",
+      prompt_gender: "What’s your gender?",
+      prompt_phone: "Almost Done!\nWhat’s your WhatsApp number?",
+      placeholder_phone: "Enter WhatsApp Number"
+    },
+    male: "Male",
+    female: "Female",
+    prefer_not_to_say: "Prefer not to say",
   },
   Hindi: {
+    voice: {
+      connecting: 'कनेक्ट हो रहा है...',
+      listening: 'सुन रहा है...',
+      speaking: 'बोल रहा है...',
+      tap_to_speak: 'बोलने के लिए टैप करें',
+      microphone_off: 'माइक्रोफोन बंद है',
+    },
     // Settings
     'settings': 'सेटिंग्स',
     'account': 'खाता',
@@ -167,6 +217,9 @@ const translations: Record<Language, Record<string, string>> = {
     'confirm_logout': 'लॉगआउट की पुष्टि करें',
     'logout_message': 'क्या आप वाकई लॉगआउट करना चाहते हैं?',
     'cancel': 'रद्द करें',
+    'accent': 'लहजा',
+    'culture': 'संस्कृति',
+    'cultural_preference': 'सांस्कृतिक प्राथमिकताएँ',
     // History
     'history': 'इतिहास',
     'type_message': 'संदेश लिखें...',
@@ -206,7 +259,7 @@ const translations: Record<Language, Record<string, string>> = {
     'profile': 'प्रोफाइल',
     // Auth
     'login': 'लॉगिन',
-    'register': 'पंजीकरण',
+    'Register': 'पंजीकरण',
     'welcome': 'स्वागत है',
     'login_subtitle': 'Aayu के साथ अपनी यात्रा जारी रखने के लिए लॉगिन करें।',
     'is_required': 'आवश्यक है',
@@ -236,16 +289,18 @@ const translations: Record<Language, Record<string, string>> = {
     'connecting': 'कनेक्ट हो रहे हैं',
     'idle': 'निष्क्रिय',
     'mic_off': 'माइक बंद',
-    // Onboarding
-    'onboarding_title_1': 'आयु में आपका स्वागत है',
-    'onboarding_title_2': 'AI वॉइस असिस्टेंट',
-    'onboarding_title_3': 'शुरू करें',
-    'onboarding_desc_1': 'रोजमर्रा के कार्यों के लिए आपका व्यक्तिगत AI वॉइस असिस्टेंट',
-    'onboarding_desc_2': 'उन्नत AI तकनीक के साथ प्राकृतिक बातचीत',
-    'onboarding_desc_3': 'आज ही आयु के साथ अपनी यात्रा शुरू करें',
-    'skip': 'छोड़ें',
-    'next': 'अगला',
-    'get_started': 'शुरू करें',
+    // Onboarding (nested)
+    onboarding: {
+      title_1: 'आयु में आपका स्वागत है',
+      desc_1: 'रोजमर्रा के कार्यों के लिए आपका व्यक्तिगत AI वॉइस असिस्टेंट',
+      title_2: 'AI वॉइस असिस्टेंट',
+      desc_2: 'उन्नत AI तकनीक के साथ प्राकृतिक बातचीत',
+      title_3: 'शुरू करें',
+      desc_3: 'आज ही आयु के साथ अपनी यात्रा शुरू करें',
+      skip: 'Skip',
+      next: 'Next',
+      get_started: 'Get Started',
+    },
     // About
     'about': 'के बारे में',
     'version': 'संस्करण',
@@ -270,6 +325,19 @@ const translations: Record<Language, Record<string, string>> = {
     'changes_policy': 'इस नीति में परिवर्तन',
     'policy_update_note': 'हम आवश्यकतानुसार इस गोपनीयता नीति को अपडेट कर सकते हैं। कोई भी परिवर्तन यहां अपडेट तिथि के साथ पोस्ट किया जाएगा।',
     'policy_questions': 'इस नीति के बारे में प्रश्नों के लिए, हमसे संपर्क करें',
+    // Register
+    register: {
+      prompt_fullname: "आपसे मिलकर अच्छा लगा!\nआपका नाम क्या है?",
+      placeholder_fullname: "अपना नाम लिखें...",
+      prompt_age: "बहुत बढ़िया!\nआपकी उम्र क्या है?",
+      placeholder_age: "अपनी उम्र लिखें...",
+      prompt_gender: "आपका लिंग क्या है?",
+      prompt_phone: "लगभग हो गया!\nआपका WhatsApp नंबर क्या है?",
+      placeholder_phone: "WhatsApp नंबर दर्ज करें"
+    },
+    male: "पुरुष",
+    female: "महिला",
+    prefer_not_to_say: "कहना नहीं चाहेंगे",
   }
 };
 
@@ -301,7 +369,17 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const t = (key: string): string => {
-    return translations[language][key] || key;
+    // Support dot notation for nested keys (e.g. onboarding.title_1)
+    const keys = key.split('.');
+    let value: any = translations[language];
+    for (const k of keys) {
+      if (value && typeof value === 'object' && k in value) {
+        value = value[k];
+      } else {
+        return key;
+      }
+    }
+    return typeof value === 'string' ? value : key;
   };
 
   return (
@@ -317,4 +395,4 @@ export const useLanguage = (): LanguageContextType => {
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
   return context;
-}; 
+};
