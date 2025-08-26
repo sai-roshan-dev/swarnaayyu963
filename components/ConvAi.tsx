@@ -11,6 +11,7 @@ import Constants from 'expo-constants';
 import VoiceBubble from './VoiceBubble';
 import VoiceActions from './VoiceActions';
 import { getSignedUrl } from '@/utils/api';
+import { sendBotMessage } from '@/utils/sendBotMessage';
 import * as SecureStore from 'expo-secure-store';
 
 const { XI_AGENT_ID, XI_API_KEY } = Constants.expoConfig?.extra || {};
@@ -169,6 +170,19 @@ CULTURAL CONTEXT:
             flash_screen,
           },
         });
+        // Show the conversation ID in the UI
+        const newConvId = conversation.getId && conversation.getId();
+        setConvId(newConvId);
+        // Send static message to bot with this conv_id
+        if (newConvId && auth_token) {
+          try {
+            const response = await sendBotMessage(newConvId, auth_token);
+            console.log('Bot response:', response);
+          } catch (err) {
+            console.error('Bot message error:', err);
+          }
+        }
+        console.error
       } else {
         setError('User name or phone number is missing.');
       }
@@ -179,8 +193,11 @@ CULTURAL CONTEXT:
     }
   }, [conversation, user_name, phone_number, isSettingsLoaded, cult]);
 
+  const [convId, setConvId] = useState<string | undefined>(undefined);
+
   const stopConversation = useCallback(async () => {
     await conversation.endSession();
+    setConvId(undefined);
   }, [conversation]);
 
 
@@ -190,6 +207,13 @@ CULTURAL CONTEXT:
       {error && (
         <View style={{ marginBottom: 20, padding: 10, backgroundColor: '#fee', borderRadius: 8 }}>
           <Text style={{ color: '#b00', textAlign: 'center' }}>{error}</Text>
+        </View>
+      )}
+      {convId && (
+        <View style={{ marginBottom: 10, padding: 8, backgroundColor: '#eef', borderRadius: 8 }}>
+          <Text style={{ color: '#333', textAlign: 'center', fontSize: 12 }}>
+            Conversation ID: {convId}
+          </Text>
         </View>
       )}
       <View style={{ marginBottom: 50}}>
