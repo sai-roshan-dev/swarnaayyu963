@@ -23,11 +23,13 @@ export default function App() {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [culturalPreference, setCulturalPreference] = useState<string>(""); // Will be set from API
   const [isSettingsLoaded, setIsSettingsLoaded] = useState<boolean>(false);
+  const [openingMessage, setOpeningMessage] = useState<string>('');
+  const [summary, setSummary] = useState<string>('');
 
   useEffect(() => {
     fetchUserSettings();
     getUserDetails();
-    
+    fetchOpeningMessage();
     checkMicPermission();
     getAuthToken();
   }, []);
@@ -131,6 +133,64 @@ export default function App() {
       setIsSettingsLoaded(true);
     }
   };
+  const fetchOpeningMessage = async () => {
+  console.log("🟢 Starting fetchOpeningMessage...");
+
+  try {
+    console.log("🔑 Fetching token from SecureStore...");
+    const token = await SecureStore.getItemAsync("token");
+
+    if (!token) {
+      console.log("❌ No token available for opening message");
+      return;
+    }
+
+    console.log("✅ Token retrieved:", token);
+
+    const url = "https://bot.swarnaayu.com/conversation/opening-message/";
+    console.log("🌐 Sending GET request to:", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${token}`,
+      },
+    });
+
+    console.log("📥 Response status:", response.status);
+
+    if (response.ok) {
+      console.log("✅ Response is OK, parsing JSON...");
+      const data = await response.json();
+
+      console.log("📦 Data received:", data);
+
+      if (data.opening_message) {
+        console.log("✅ Opening message found:", data.opening_message);
+        setOpeningMessage(data.opening_message);
+        console.log(openingMessage);
+
+        if (data.summary) {
+          console.log("✅ Summary found:", data.summary);
+          setSummary(data.summary);
+        } else {
+          console.log("⚠️ No summary found in response");
+        }
+      } else {
+        console.log("⚠️ No opening_message found in response");
+      }
+    } else {
+      console.log("❌ API call failed with status:", response.status);
+      const errorText = await response.text();
+      console.log("❌ Error response body:", errorText);
+    }
+  } catch (error) {
+    console.error("💥 Error in fetchOpeningMessage:", error);
+  } finally {
+    console.log("🔴 fetchOpeningMessage finished");
+  }
+};
 
 
 
@@ -177,6 +237,8 @@ export default function App() {
           setStatus={setStatus}
           cult={culturalPreference}
           isSettingsLoaded={isSettingsLoaded}
+          openingMessage={openingMessage}
+          summary={summary}
         />
       </View>
 
