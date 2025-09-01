@@ -4,17 +4,20 @@ import axios from 'axios';
 export async function sendBotMessage(conversation_id: string, authToken: string) {
   const url = 'https://bot.swarnaayu.com/conversation/chat/';
 
+  // Ensure auth token is properly formatted
+  const formattedToken = authToken.startsWith('Token ') ? authToken : `Token ${authToken}`;
+
   const body = {
     message: 'can you tell the weather in the razole, east godavari district, ap',
     mode: 'voice',
-    conversation_id: `${conversation_id}`,
+    conversation_id: conversation_id,
   };
 
   try {
     const res = await axios.post(url, body, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Token ${authToken}`,
+        'Authorization': formattedToken,
       },
     });
 

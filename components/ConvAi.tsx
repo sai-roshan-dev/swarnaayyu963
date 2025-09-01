@@ -213,7 +213,6 @@ CULTURAL CONTEXT:
             console.error('Bot message error:', err);
           }
         }
-
     setConvId(undefined);
   }, [conversation]);
 
