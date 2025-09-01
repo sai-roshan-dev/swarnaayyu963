@@ -205,6 +205,15 @@ CULTURAL CONTEXT:
 
   const stopConversation = useCallback(async () => {
     await conversation.endSession();
+    if (convId && auth_token) {
+          try {
+            const response = await sendBotMessage(convId, auth_token);
+            console.log('Bot response:', response);
+          } catch (err) {
+            console.error('Bot message error:', err);
+          }
+        }
+
     setConvId(undefined);
   }, [conversation]);
 
