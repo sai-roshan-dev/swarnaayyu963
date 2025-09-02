@@ -208,6 +208,37 @@ export default function App() {
     setPermissionStatus(status);
   };
 
+const testFetch = async (conversationId: string) => {
+      try {
+        const token = await SecureStore.getItemAsync('token');
+        const res = await fetch("https://bot.swarnaayu.com/conversation/chat/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Token ${token}`,
+          },
+          body: JSON.stringify({
+            message: "hi",
+            mode: "voice",
+            conversation_id: conversationId,
+          }),
+        });
+
+        console.log("✅ Status:", res.status);
+        const text = await res.text();
+        console.log("✅ Response:", text);
+      } catch (err) {
+        console.error("❌ Fetch failed:", err);
+      }
+    };
+
+
+
+
+
+
+
+
   return (
     <View style={styles.container}>
       <GradientBackground />
@@ -239,6 +270,8 @@ export default function App() {
           isSettingsLoaded={isSettingsLoaded}
           openingMessage={openingMessage}
           summary={summary}
+          testFetch={testFetch}
+          fetchOpeningMessage={fetchOpeningMessage}
         />
       </View>
 
