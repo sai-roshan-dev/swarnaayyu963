@@ -3,6 +3,7 @@
 import { useConversation } from '@11labs/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform, Text } from 'react-native';
+import axios from 'axios';
 
 
 import tools from '../utils/tools';
@@ -11,7 +12,7 @@ import Constants from 'expo-constants';
 import VoiceBubble from './VoiceBubble';
 import VoiceActions from './VoiceActions';
 import { getSignedUrl } from '@/utils/api';
-import { sendBotMessage } from '@/utils/sendBotMessage';
+// import { sendBotMessage } from '@/utils/sendBotMessage';
 import * as SecureStore from 'expo-secure-store';
 
 const { XI_AGENT_ID, XI_API_KEY } = Constants.expoConfig?.extra || {};
@@ -92,6 +93,34 @@ export default function ConvAiDOMComponent({
       console.error('Error:', error)
     },
   });
+  const sendBotMessage = async (conversation_id: string, authToken: string) => {
+    console.log('Sending bot message with conversation_id:', conversation_id);
+    console.log('Using authToken:', authToken);
+    const url = "https://bot.swarnaayu.com/conversation/chat/";
+    
+    const body = {
+      message: "can you tell the weather in the razole, east godavari district, ap",
+      mode: "voice",
+      conversation_id:conversation_id,
+    };
+
+    try {
+      const res = await axios.post(url, body, {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization":`${authToken}`, // same as curl
+        },
+      });
+    }
+    catch (error: any) {
+      console.error("Axios Error:", error.response?.data || error.message);
+      throw new Error(
+        error.response
+          ? `Failed: ${error.response.status} - ${JSON.stringify(error.response.data)}`
+          : `Network error: ${error.message}`
+      );
+    }
+  }
 
 
 
@@ -107,6 +136,8 @@ export default function ConvAiDOMComponent({
 
 
   const startConversation = useCallback(async () => {
+    auth_token = await SecureStore.getItemAsync('auth_token');
+    sendBotMessage("cov_jdnfkjvfdjnv", "Token "+auth_token);
     try {
       setError(null);
       if(user_name && phone_number){
@@ -168,6 +199,7 @@ CULTURAL CONTEXT:
         };
         if (typeof auth_token === 'string') {
           dynamicVars.auth_token = `Token ${auth_token}`;
+          auth_token = `Token ${auth_token}`;
         }
         await conversation.startSession({
           signedUrl,
@@ -182,7 +214,7 @@ CULTURAL CONTEXT:
         const newConvId = conversation.getId && conversation.getId();
         setConvId(newConvId);
         // Send static message to bot with this conv_id
-        if (newConvId && auth_token) {
+        if (newConvId && auth_token) {sendBotMessage
           try {
             const response = await sendBotMessage(newConvId, auth_token);
             console.log('Bot response:', response);
@@ -227,9 +259,10 @@ CULTURAL CONTEXT:
       )}
       {convId && (
         <View style={{ marginBottom: 10, padding: 8, backgroundColor: '#eef', borderRadius: 8 }}>
-          {/* <Text style={{ color: '#333', textAlign: 'center', fontSize: 12 }}>
+          <Text style={{ color: '#333', textAlign: 'center', fontSize: 12 }}>
             Conversation ID: {convId}
-          </Text> */}
+            auth_token:{auth_token}
+          </Text> 
         </View>
       )}
       <View style={{ marginBottom: 50}}>
