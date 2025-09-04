@@ -12,7 +12,6 @@ import { useAuthRedirect } from '@/hooks/useAuthCheck';
 import * as SecureStore from 'expo-secure-store';
 import GradientBackground from '@/components/GradientBackground';
 import { useCallback } from 'react';
-
 export default function App() {
   const router = useRouter();
   const [user_name, setName] = useState<string>("")
@@ -22,10 +21,10 @@ export default function App() {
   const [permissionStatus, setPermissionStatus] = useState<'undetermined' | 'granted' | 'denied'>('undetermined');
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [culturalPreference, setCulturalPreference] = useState<string>(""); // Will be set from API
+  const [accent, setAccent] = useState<string>('default'); // Will be set from API
   const [isSettingsLoaded, setIsSettingsLoaded] = useState<boolean>(false);
-  const [openingMessage, setOpeningMessage] = useState<string>('');
-  const [summary, setSummary] = useState<string>('');
-
+  const [openingMessage] = useState<string>('');
+  const [summary] = useState<string>('');
   useEffect(() => {
     fetchUserSettings();
     getUserDetails();
@@ -33,22 +32,27 @@ export default function App() {
     checkMicPermission();
     getAuthToken();
   }, []);
-
   // Use focus effect to refresh cultural preference when returning to this screen
   useFocusEffect(
     useCallback(() => {
       const refreshCulturalPreference = async () => {
         const cachedPreference = await SecureStore.getItemAsync('cultural_preference');
         if (cachedPreference && cachedPreference !== culturalPreference) {
-          console.log('🔄 Refreshing cultural preference from cache:', cachedPreference);
+          console.log(':arrows_anticlockwise: Refreshing cultural preference from cache:', cachedPreference);
           setCulturalPreference(cachedPreference);
         }
       };
-      
+      const refreshAccent = async () => {
+        const cachedAccent = await SecureStore.getItemAsync('accent');
+        if (cachedAccent) {
+          console.log(':arrows_anticlockwise: Refreshing accent from cache:', cachedAccent);
+          setAccent(cachedAccent)
+        }
+      };
       refreshCulturalPreference();
-    }, [culturalPreference])
+      refreshAccent();
+    }, [culturalPreference, accent])
   );
-
   const getUserDetails = async() =>{
     const user_name = await SecureStore.getItemAsync('name');
     const phone_number = await SecureStore.getItemAsync('phone_number');
@@ -59,32 +63,28 @@ export default function App() {
       setPhone(phone_number)
     }
   }
-
   const fetchUserSettings = async () => {
-    console.log('🔄 Starting fetchUserSettings...');
+    console.log(':arrows_anticlockwise: Starting fetchUserSettings...');
     try {
       const token = await SecureStore.getItemAsync('token');
-      console.log('🔑 Token retrieved:', token ? 'Token exists' : 'No token found');
-      
+      console.log(':key: Token retrieved:', token ? 'Token exists' : 'No token found');
       if (!token) {
-        console.log('❌ No token available, marking settings as loaded');
+        console.log(':x: No token available, marking settings as loaded');
         setIsSettingsLoaded(true);
         return;
       }
-
       // Check if settings were just updated to avoid unnecessary API calls
       const settingsJustUpdated = await SecureStore.getItemAsync('settings_just_updated');
       const updateTimestamp = await SecureStore.getItemAsync('settings_update_timestamp');
-      
       if (settingsJustUpdated === 'true' && updateTimestamp) {
         const timeDiff = Date.now() - parseInt(updateTimestamp);
         // If settings were updated within the last 5 minutes, use cached values
         if (timeDiff < 5 * 60 * 1000) {
-          console.log('⚡ Settings were recently updated, using cached values');
+          console.log(':zap: Settings were recently updated, using cached values');
           const cachedPreference = await SecureStore.getItemAsync('cultural_preference');
           if (cachedPreference) {
             setCulturalPreference(cachedPreference);
-            console.log('✅ Cultural preference set from cache:', cachedPreference);
+            console.log(':white_tick: Cultural preference set from cache:', cachedPreference);
           }
           setIsSettingsLoaded(true);
           // Clear the flag after using it to ensure fresh data on next app start
@@ -97,8 +97,7 @@ export default function App() {
           await SecureStore.deleteItemAsync('settings_update_timestamp');
         }
       }
-
-      console.log('📡 Making API call to fetch user settings...');
+      console.log(':satellite_antenna: Making API call to fetch user settings...');
       const response = await fetch('https://bot.swarnaayu.com/user/settings/', {
         method: 'GET',
         headers: {
@@ -106,50 +105,41 @@ export default function App() {
           'Authorization': `Token ${token}`,
         },
       });
-
-      console.log('📡 API Response status:', response.status);
-
+      console.log(':satellite_antenna: API Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ User settings response:', data);
-        console.log('🌍 Cultural preference from API:', data.cultural_preference);
+        console.log(':white_tick: User settings response:', data);
+        console.log(':earth_africa: Cultural preference from API:', data.cultural_preference);
         const preference = data.cultural_preference;
         setCulturalPreference(preference);
-        console.log('✅ Cultural preference set to:', preference);
-        
+        console.log(':white_tick: Cultural preference set to:', preference);
         // Cache the preference for future use
         await SecureStore.setItemAsync('cultural_preference', preference);
       } else {
-        console.log('❌ API call failed with status:', response.status);
+        console.log(':x: API call failed with status:', response.status);
         const errorText = await response.text();
-        console.log('❌ Error response:', errorText);
+        console.log(':x: Error response:', errorText);
       }
-      
-      console.log('✅ Marking settings as loaded');
+      console.log(':white_tick: Marking settings as loaded');
       setIsSettingsLoaded(true);
     } catch (error) {
-      console.error('❌ Error in fetchUserSettings:', error);
-      console.log('✅ Marking settings as loaded despite error');
+      console.error(':x: Error in fetchUserSettings:', error);
+      console.log(':white_tick: Marking settings as loaded despite error');
       setIsSettingsLoaded(true);
     }
   };
   const fetchOpeningMessage = async () => {
-  console.log("🟢 Starting fetchOpeningMessage...");
-
+  console.log(":large_green_circle: Starting fetchOpeningMessage...");
   try {
-    console.log("🔑 Fetching token from SecureStore...");
+    console.log(":key: Fetching token from SecureStore...");
     const token = await SecureStore.getItemAsync("token");
-
     if (!token) {
-      console.log("❌ No token available for opening message");
-      return;
+      console.log(":x: No token available for opening message");
+      return { openingMessage: "", summary: "" }
     }
-
-    console.log("✅ Token retrieved:", token);
-
+    console.log(":white_tick: Token retrieved:", token);
     const url = "https://bot.swarnaayu.com/conversation/opening-message/";
-    console.log("🌐 Sending GET request to:", url);
-
+    console.log(":globe_with_meridians: Sending GET request to:", url);
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -157,57 +147,52 @@ export default function App() {
         Authorization: `Token ${token}`,
       },
     });
-
-    console.log("📥 Response status:", response.status);
-
+    console.log(":inbox_tray: Response status:", response.status);
     if (response.ok) {
-      console.log("✅ Response is OK, parsing JSON...");
+      console.log(":white_tick: Response is OK, parsing JSON...");
       const data = await response.json();
-
-      console.log("📦 Data received:", data);
-
-      if (data.opening_message) {
-        console.log("✅ Opening message found:", data.opening_message);
-        setOpeningMessage(data.opening_message);
-        console.log(openingMessage);
-
-        if (data.summary) {
-          console.log("✅ Summary found:", data.summary);
-          setSummary(data.summary);
+      console.log(":package: Data received:", data);
+      // if (data.opening_message) {
+      //   console.log(":white_tick: Opening message found:", data.opening_message);
+      //   setOpeningMessage(data.opening_message);
+      //   console.log(openingMessage);
+      const openingMessage = data.opening_message || "";
+      const summary = data.summary || "";
+        // if (data.summary) {
+        //   console.log(":white_tick: Summary found:", data.summary);
+        //   setSummary(data.summary);
+       console.log("Opening Message:", openingMessage);
+       console.log("Summary:", summary);
+          return { openingMessage, summary };
         } else {
-          console.log("⚠️ No summary found in response");
-        }
-      } else {
-        console.log("⚠️ No opening_message found in response");
-      }
-    } else {
-      console.log("❌ API call failed with status:", response.status);
+      //     console.log(":warning: No summary found in response");
+      //   }
+      // } else {
+      //   console.log(":warning: No opening_message found in response");
+      // }
+    // } else {
+      console.log(":x: API call failed with status:", response.status);
       const errorText = await response.text();
-      console.log("❌ Error response body:", errorText);
+      console.log(":x: Error response body:", errorText);
+      return { openingMessage: "", summary: ""};
     }
   } catch (error) {
-    console.error("💥 Error in fetchOpeningMessage:", error);
+    console.error(":boom: Error in fetchOpeningMessage:", error);
+    return { openingMessage: "", summary: ""};
   } finally {
-    console.log("🔴 fetchOpeningMessage finished");
+    console.log(":red_circle: fetchOpeningMessage finished");
   }
 };
-
-
-
-
-
   const getAuthToken = async () => {
     const token = await SecureStore.getItemAsync('token');
     if (token) {
       setAuthToken(token);
     }
   }
-
   const checkMicPermission = async () => {
     const { status } = await Audio.getPermissionsAsync();
     setPermissionStatus(status);
   };
-
 const testFetch = async (conversationId: string) => {
       try {
         const token = await SecureStore.getItemAsync('token');
@@ -223,22 +208,13 @@ const testFetch = async (conversationId: string) => {
             conversation_id: conversationId,
           }),
         });
-
-        console.log("✅ Status:", res.status);
+        console.log(":white_tick: Status:", res.status);
         const text = await res.text();
-        console.log("✅ Response:", text);
+        console.log(":white_tick: Response:", text);
       } catch (err) {
-        console.error("❌ Fetch failed:", err);
+        console.error(":x: Fetch failed:", err);
       }
     };
-
-
-
-
-
-
-
-
   return (
     <View style={styles.container}>
       <GradientBackground />
@@ -250,9 +226,7 @@ const testFetch = async (conversationId: string) => {
         </Text>
       </View>
       {/* Clock Icon */}
-     
-
-      <View style={styles.domComponentContainer}>       
+      <View style={styles.domComponentContainer}>
         <ConvAiDOMComponent
           dom={{ style: styles.domComponent }}
           permissionStatus={permissionStatus}
@@ -274,7 +248,6 @@ const testFetch = async (conversationId: string) => {
           fetchOpeningMessage={fetchOpeningMessage}
         />
       </View>
-
       {/* Bottom Background Image */}
       <Image
         source={require('../../assets/images/back_lower.png')}
@@ -284,6 +257,7 @@ const testFetch = async (conversationId: string) => {
     </View>
   );
 }
+  
 
 const styles = StyleSheet.create({
   container: {
