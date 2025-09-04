@@ -22,7 +22,7 @@ export default {
       supportsTablet: true,
       bundleIdentifier: "com.sai.swarnaayu",
       icon: "./assets/images/image.png",
-      buildNumber: "10",
+      buildNumber: "19",
     },
 
     android: {
@@ -50,7 +50,7 @@ export default {
       XI_AGENT_ID: process.env.XI_AGENT_ID,
       XI_API_KEY: process.env.XI_API_KEY,
       eas: {
-         "projectId": "7c2afd86-f3ba-48f1-a3cf-51dcfcedcc6d"
+           "projectId": "4ee4a8aa-5865-470c-9641-6fc1719e8024"
       }
     }
   }

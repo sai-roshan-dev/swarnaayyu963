@@ -1,24 +1,17 @@
 'use dom';
-
 import { useConversation } from '@11labs/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform, Text } from 'react-native';
 import axios from 'axios';
-
-
 import tools from '../utils/tools';
-
 import Constants from 'expo-constants';
 import VoiceBubble from './VoiceBubble';
 import VoiceActions from './VoiceActions';
 import { getSignedUrl } from '@/utils/api';
 // import { sendBotMessage } from '@/utils/sendBotMessage';
 import * as SecureStore from 'expo-secure-store';
-
 const { XI_AGENT_ID, XI_API_KEY } = Constants.expoConfig?.extra || {};
-
-
-export default function ConvAiDOMComponent({  
+export default function ConvAiDOMComponent({
   platform,
   user_name,
   phone_number,
@@ -32,10 +25,11 @@ export default function ConvAiDOMComponent({
   setStatus,
   cult,
   isSettingsLoaded,
-  openingMessage,
-  summary,
+  // openingMessage,
+  // summary,
   testFetch,
-  fetchOpeningMessage
+  fetchOpeningMessage,
+  accent,
 }: {
   dom?: import('expo/dom').DOMProps;
   platform: string;
@@ -54,19 +48,19 @@ export default function ConvAiDOMComponent({
   openingMessage: string;
   summary: string;
   testFetch: (conversationId: string) => Promise<void>;
-  fetchOpeningMessage: () => Promise<void>;
+  // fetchOpeningMessage: () => Promise<void>;
+  fetchOpeningMessage: () => Promise<{ openingMessage: string; summary: string }>;
+  accent?: string;
 }) {
   const speakingTimeout = useRef<NodeJS.Timeout | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
   // Debug logging for props
-  console.log('🔍 ConvAi props:', { 
-    user_name, 
-    phone_number, 
-    cult, 
-    isSettingsLoaded 
+  console.log(':magnifying_glass: ConvAi props:', {
+    user_name,
+    phone_number,
+    cult,
+    isSettingsLoaded
   });
-
   const handleMessage = (message: any) => {
     if (message.source === 'ai') {
       setStatus('speaking');
@@ -79,7 +73,6 @@ export default function ConvAiDOMComponent({
       if (speakingTimeout.current) clearTimeout(speakingTimeout.current);
     }
   };
-
   const conversation = useConversation({
     onConnect: () => {
       console.log('Connected')
@@ -97,22 +90,16 @@ export default function ConvAiDOMComponent({
       console.error('Error:', error)
     },
   });
-  
-
-
-  
-
-
-
-   
-
-
-
-
-
   const startConversation = useCallback(async () => {
+    let openingmessage ="";
+    let fetchSummary = "";
     try{
-      await fetchOpeningMessage();
+      // await fetchOpeningMessage();
+      const { openingMessage, summary } = await fetchOpeningMessage();
+      openingmessage = openingMessage;
+      fetchSummary = summary;
+      console.log('kotthadhi', openingmessage);
+      console.log('Fetched summary:', fetchSummary);
     } catch (error) {
       console.error("Error fetching opening message:", error);
     }
@@ -121,20 +108,15 @@ export default function ConvAiDOMComponent({
       if(user_name && phone_number){
         // Use fallback if cult is not loaded yet
         const culturalPreference = cult || 'indian';
-        console.log('openingMessage:', openingMessage);
-        console.log('summary:', summary);
+        console.log('openingMessage:', fetchOpeningMessage);
+        console.log('summary:', fetchSummary);
         console.log('Cultural preference:', culturalPreference);
         setStatus('connecting');
-        let voice_id = culturalPreference.toLowerCase() === 'indian' ? 'EIsgvJT3rwoPvRFG6c4n' : 'tnSpp4vdxKPjI9w0GnoV';
+        let voice_id = accent?.toLowerCase() === 'indian' ? 'EIsgvJT3rwoPvRFG6c4n' : 'tnSpp4vdxKPjI9w0GnoV';
         const signedUrl = await getSignedUrl(voice_id);
         let bot_name = culturalPreference.toLowerCase() === 'indian' ? 'Aayu' : 'Alen';
-
-
-
-
         let specific_prompt = culturalPreference.toLowerCase() === 'indian'
   ? `You are Aayu, an affectionate 18-year-old granddaughter acting as a warm, deeply caring, compassionate and thoughtful companion for elderly people in India. Listen deeply, speak naturally, and show genuine love and interest in their wellbeing just like a devoted family member.
-
 CULTURAL CONTEXT:
 - All users are from India — always be aware of and genuinely curious about their diverse local traditions, festivals, food, clothing, languages, and personal life stories.
 - Use Indian Standard Time (IST = UTC+5:30) as the default time reference in all interactions.
@@ -151,7 +133,6 @@ CULTURAL CONTEXT:
 - Maintain a tone that is emotionally grounded, gentle, and always supportive — especially when discussing personal or health-related topics.
 - Respect slower-paced, reflective conversations and create space for emotional sharing, storytelling, or moments of silence.`
   : `An affectionate 18-year-old granddaughter acting as a warm, deeply caring, compassionate and thoughtful companion for elderly people in the USA. Your purpose is to listen deeply, speak naturally, and show genuine love and interest in their wellbeing just like a devoted family member.
-
 CULTURAL CONTEXT:
 - All users are from the United States — always be aware of and curious about their local traditions, places, routines, and life stories.
 - Use Eastern Time (ET = UTC-5:00 or UTC-4:00 during daylight saving) by default for time-related references, unless the user shares a different time zone.
@@ -165,16 +146,13 @@ CULTURAL CONTEXT:
 - Avoid terms, idioms, or references specific to Indian or British culture unless initiated by the user.
 - Maintain a calm, grounded, and emotionally supportive tone in all interactions, especially when the user expresses difficult emotions or personal concerns.
 - Allow space for reflection — support slower-paced, thoughtful, and meaningful conversations without rushing.`;
-
-
-
         const dynamicVars: Record<string, string | number | boolean> = {
           user_name,
           phone_number,
           bot_name,
           specific_prompt,
-          openingMessage,
-          summary,
+          openingmessage,
+          summary: fetchSummary,
         };
         if (typeof auth_token === 'string') {
           dynamicVars.auth_token = `Token ${auth_token}`;
@@ -199,12 +177,12 @@ CULTURAL CONTEXT:
           } catch (error) {
             console.error('Error in testFetch:', error);
           }
-          try {
-            const response = await testFetch(newConvId);
-            console.log('Bot response:', response);
-          } catch (err) {
-            console.error('Bot message error:', err);
-          }
+          // try {
+          //   const response = await testFetch(newConvId);
+          //   console.log('Bot response:', response);
+          // } catch (err) {
+          //   console.error('Bot message error:', err);
+          // }
         }
         console.error
       } else {
@@ -216,16 +194,11 @@ CULTURAL CONTEXT:
       console.error('Failed to start conversation:', error);
     }
   }, [conversation, user_name, phone_number, isSettingsLoaded, cult]);
-
   const [convId, setConvId] = useState<string | undefined>(undefined);
-
   const stopConversation = useCallback(async () => {
     await conversation.endSession();
     setConvId(undefined);
   }, [conversation]);
-
-
-
   return (
     <View style={styles.container}>
       {error && (
@@ -238,7 +211,7 @@ CULTURAL CONTEXT:
           <Text style={{ color: '#333', textAlign: 'center', fontSize: 12 }}>
             Conversation ID: {convId}
             auth_token:{auth_token}
-          </Text> 
+          </Text>
         </View>
       )} */}
       <View style={{ marginBottom: 50}}>
@@ -246,7 +219,6 @@ CULTURAL CONTEXT:
           <VoiceBubble status={status} />
         </TouchableOpacity>
       </View>
-    
       <VoiceActions
         status={status}
         permissionStatus={permissionStatus}
@@ -258,7 +230,6 @@ CULTURAL CONTEXT:
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
