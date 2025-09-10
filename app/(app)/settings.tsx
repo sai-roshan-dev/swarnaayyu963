@@ -19,6 +19,7 @@ import { useTextSize } from '@/context/TextSettingsContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { ThemedText } from '@/components/ThemedText';
 import { setUserCountry, getUserCountry } from '@/utils/country';
+import Constants from 'expo-constants';
 
 // Define types based on context assumptions
 type Language = 'English' | 'Hindi';
