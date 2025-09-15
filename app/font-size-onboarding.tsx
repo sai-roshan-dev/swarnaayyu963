@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTextSize } from '@/context/TextSettingsContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -18,6 +19,7 @@ const FONT_SIZES = ['Small', 'Medium', 'Large'];
 export default function FontSizeOnboarding() {
   const { textSize, setTextSize } = useTextSize();
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <View style={styles.container}>
@@ -27,8 +29,7 @@ export default function FontSizeOnboarding() {
         <Ionicons name="arrow-back" size={28} color="#222" />
       </TouchableOpacity>
       {/* Question */}
-      <Text style={styles.question}>{`What font size feels
-best for you?`}</Text>
+      <Text style={styles.question}>{t('font_size_question')}</Text>
       {/* Radio Options */}
       <View style={styles.radioGroup}>
         {FONT_SIZES.map((size) => {
@@ -45,7 +46,7 @@ best for you?`}</Text>
               <View style={[styles.radioCircle, textSize === size && styles.radioCircleSelected]}>
                 {textSize === size && <View style={styles.radioDot} />}
               </View>
-              <Text style={[styles.radioLabel, textSize === size && styles.radioLabelSelected, { fontSize: labelFontSize }]}>{size}</Text>
+              <Text style={[styles.radioLabel, textSize === size && styles.radioLabelSelected, { fontSize: labelFontSize }]}>{t(size.toLowerCase())}</Text>
             </TouchableOpacity>
           );
         })}
@@ -56,7 +57,7 @@ best for you?`}</Text>
         onPress={() => router.replace('/language-onboarding' as any)}
         disabled={!textSize}
       >
-        <Text style={styles.buttonText}>Next</Text>
+        <Text style={styles.buttonText}>{t('next')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -148,4 +149,4 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
   },
-}); 
+});

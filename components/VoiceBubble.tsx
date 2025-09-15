@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import MicGradientIcon from './ui/MicIcon';
+import { useLanguage } from '@/context/LanguageContext';
 
 type Status = 'idle' | 'listening' | 'mic-off' | 'connecting' | 'speaking';
 
@@ -13,6 +14,7 @@ type Props = {
 
 export default function VoiceBubble({ status, microphonePermisstion }: Props) {
   const rotateAnim = useRef(new Animated.Value(0)).current;
+  const { t } = useLanguage();
 
   useEffect(() => {
     Animated.loop(
@@ -33,15 +35,15 @@ export default function VoiceBubble({ status, microphonePermisstion }: Props) {
   const getText = () => {
     switch (status) {
       case 'connecting':
-        return 'Connecting...';
+        return t('voice.connecting'); // Corrected key
       case 'listening':
-        return 'Listening..';
+        return t('voice.listening'); // Corrected key
       case 'speaking':
-        return 'speaking..';
+        return t('voice.speaking'); // Corrected key
       case 'idle':
-        return 'Tap to Speak';
+        return t('voice.tap_to_speak'); // Corrected key
       case 'mic-off':
-        return 'mic_off';
+        return t('voice.microphone_off'); // Corrected key
       default:
         return '';
     }
@@ -49,7 +51,15 @@ export default function VoiceBubble({ status, microphonePermisstion }: Props) {
 
   const shouldAnimate = status === 'listening' || status === 'speaking';
 
-  const OuterRing = ({ size, delay = 0, animate = false }: { size: number; delay?: number; animate?: boolean }) => (
+  const OuterRing = ({
+    size,
+    delay = 0,
+    animate = false,
+  }: {
+    size: number;
+    delay?: number;
+    animate?: boolean;
+  }) => (
     <Animatable.View
       animation={
         animate
@@ -80,8 +90,6 @@ export default function VoiceBubble({ status, microphonePermisstion }: Props) {
       <OuterRing size={220} delay={400} animate={shouldAnimate} />
       <OuterRing size={260} delay={800} animate={shouldAnimate} />
 
-      {/* Rotating Dashed Outline with minimal 3D tilt */}
-     
       {/* Light Black Circle Line with subtle 3D effect */}
       <View style={styles.outerCircle}>
         <LinearGradient

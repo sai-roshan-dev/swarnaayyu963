@@ -35,15 +35,22 @@ export default function AboutAayuScreen() {
   };
 
   const handleSignaturePress = () => {
-    Alert.alert(t('aayu_team'), t('aayu_team_message'));
+    Alert.alert(t('aayu_team_alert_title'), t('aayu_team_alert_message'));
   };
 
   const features = [
-    { icon: 'chatbubble-outline', text: 'Friendly chats anytime' },
-    { icon: 'alarm-outline', text: 'Gentle daily reminders' },
-    { icon: 'newspaper-outline', text: 'Latest news updates' },
-    { icon: 'heart-outline', text: 'Support at your pace' },
+    { icon: 'chatbubble-outline', text: t('feature_1') },
+    { icon: 'alarm-outline', text: t('feature_2') },
+    { icon: 'newspaper-outline', text: t('feature_3') },
+    { icon: 'heart-outline', text: t('feature_4') },
   ];
+  
+  const getAboutText = () => {
+    const mainDesc = t('main_description');
+    const highlight = t('aayu_highlight');
+    // Replace the placeholder "Aayu" with the translated highlight
+    return mainDesc.replace('Aayu', highlight);
+  };
 
   return (
     <View style={styles.container}>
@@ -52,7 +59,7 @@ export default function AboutAayuScreen() {
         <TouchableOpacity onPress={() => router.back()} accessibilityLabel={t('go_back')} accessibilityRole="button">
           <Ionicons name="arrow-back" size={28} color="#222" />
         </TouchableOpacity>
-        <ThemedText type="title" style={styles.headerTitle}>About Aayu</ThemedText>
+        <ThemedText type="title" style={styles.headerTitle}>{t('about_aayu')}</ThemedText>
         <View style={{ width: 28 }} />
       </View>
 
@@ -62,15 +69,12 @@ export default function AboutAayuScreen() {
         style={styles.content}
       >
         <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
-          {/* <View style={styles.logoContainer}>
-            <Ionicons name="heart" size={60} color="#1976D2" />
-          </View> */}
           <ThemedText style={styles.aayuName}>
-            Meet <ThemedText style={styles.aayuHighlight}>Aayu</ThemedText>, your friendly AI companion crafted for seniors. Aayu chats with you, shares daily news, and offers gentle reminders to keep you on track—all at your pace, with warmth and care.
+            {getAboutText()}
           </ThemedText>
 
           <View style={styles.featuresContainer}>
-            <ThemedText style={styles.featuresTitle}>What Aayu Offers</ThemedText>
+            <ThemedText style={styles.featuresTitle}>{t('features_title')}</ThemedText>
             {features.map((feature, index) => (
               <View key={index} style={styles.featureItem}>
                 <Ionicons name={feature.icon as any} size={24} color="#1976D2" style={styles.featureIcon} />
@@ -85,12 +89,12 @@ export default function AboutAayuScreen() {
             accessibilityLabel={t('contact_aayu_team')}
             accessibilityRole="button"
           >
-            <ThemedText style={styles.contactButtonText}>Get in Touch</ThemedText>
+            <ThemedText style={styles.contactButtonText}>{t('get_in_touch')}</ThemedText>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={handleSignaturePress} accessibilityLabel={t('aayu_team')}>
             <ThemedText style={styles.signature}>
-              With warmth and care,{"\n"}The Aayu Team
+              {t('signature')}
             </ThemedText>
           </TouchableOpacity>
         </Animated.View>

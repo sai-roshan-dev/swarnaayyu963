@@ -13,14 +13,14 @@ import { useLanguage } from '@/context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
-const LANGUAGES = [
-  { label: 'English', value: 'English' },
-  { label: 'Hindi', value: 'Hindi' },
-];
-
 export default function LanguageOnboarding() {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const router = useRouter();
+
+  const LANGUAGES = [
+    { label: t('english'), value: 'English' },
+    { label: t('hindi'), value: 'Hindi' },
+  ];
 
   return (
     <View style={styles.container}>
@@ -30,8 +30,7 @@ export default function LanguageOnboarding() {
         <Ionicons name="arrow-back" size={28} color="#222" />
       </TouchableOpacity>
       {/* Question */}
-      <Text style={styles.question}>{`Which Language do
-you prefer?`}</Text>
+      <Text style={styles.question}>{t('language_preference_question')}</Text>
       {/* Radio Options */}
       <View style={styles.radioGroup}>
         {LANGUAGES.map((lang) => (
@@ -53,7 +52,7 @@ you prefer?`}</Text>
         onPress={() => router.replace('/on-boarding' as any)}
         disabled={!language}
       >
-        <Text style={styles.buttonText}>Proceed</Text>
+        <Text style={styles.buttonText}>{t('proceed')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -145,4 +144,4 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
   },
-}); 
+});

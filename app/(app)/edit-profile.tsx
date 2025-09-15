@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useLanguage } from '@/context/LanguageContext';
@@ -19,7 +19,7 @@ export default function EditProfileScreen() {
     try {
       const token = await SecureStore.getItemAsync('token');
       if (!token) {
-        Alert.alert('Error', 'No auth token found. Please log in again.');
+        Alert.alert(t('error'), t('no_auth_token_login_again'));
         setLoading(false);
         return;
       }
@@ -36,19 +36,15 @@ export default function EditProfileScreen() {
         }),
       });
       if (response.ok) {
-        // // Update SecureStore with new details
-        // await SecureStore.setItemAsync('name', name);
-        // await SecureStore.setItemAsync('age', age);
-        // await SecureStore.setItemAsync('gender', gender);
-        Alert.alert('Success', 'Profile updated successfully!', [
-          { text: 'OK', onPress: () => router.back() },
+        Alert.alert(t('success'), t('profile_updated_successfully'), [
+          { text: t('ok'), onPress: () => router.back() },
         ]);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        Alert.alert('Error', errorData.detail || 'Failed to update profile.');
+        Alert.alert(t('error'), errorData.detail || t('failed_update_profile'));
       }
     } catch (err) {
-      Alert.alert('Error', 'An error occurred. Please try again.');
+      Alert.alert(t('error'), t('error_occurred_try_again'));
     } finally {
       setLoading(false);
     }
@@ -58,10 +54,10 @@ export default function EditProfileScreen() {
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* Header */}
       <View style={styles.navbar}>
+        {/* Back Button */}
         <TouchableOpacity
-          style={{ padding: 10, zIndex: 100, pointerEvents: 'auto' }}
+          style={styles.backButton}
           onPress={() => {
-            console.log('Back arrow pressed');
             if (router.canGoBack && router.canGoBack()) {
               router.back();
             } else {
@@ -69,11 +65,18 @@ export default function EditProfileScreen() {
             }
           }}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityLabel={t('back_button')}
         >
           <Ionicons name="arrow-back" size={28} color="#222" />
         </TouchableOpacity>
-        <ThemedText style={styles.navbarTitle}>{t('settings')}</ThemedText>
-        <View style={{ width: 28 }} />
+
+        {/* Title */}
+        <ThemedText style={styles.navbarTitle} numberOfLines={1}>
+          {t('edit_profile')}
+        </ThemedText>
+
+        {/* Right placeholder to balance layout */}
+        <View style={{ width: 44 }} />
       </View>
 
       {/* Form */}
@@ -86,6 +89,7 @@ export default function EditProfileScreen() {
           value={name}
           onChangeText={setName}
         />
+
         <ThemedText style={[styles.label, { marginTop: 24 }]}>{t('age')}</ThemedText>
         <TextInput
           style={styles.input}
@@ -95,21 +99,27 @@ export default function EditProfileScreen() {
           onChangeText={setAge}
           keyboardType="numeric"
         />
+
         <ThemedText style={[styles.label, { marginTop: 24 }]}>{t('gender')}</ThemedText>
         <View style={styles.genderRow}>
-          {[t('Male'), t('Female'), t('Prefer not to say')].map((g, idx) => (
+          {['Male', 'Female', 'Prefer not to say'].map((g) => (
             <TouchableOpacity
               key={g}
               style={styles.genderOption}
-              onPress={() => setGender(['Male', 'Female', 'Prefer not to say'][idx] as 'Male' | 'Female' | 'Prefer not to say')}
+              onPress={() => setGender(g as 'Male' | 'Female' | 'Prefer not to say')}
             >
-              <View style={[styles.radio, gender === ['Male', 'Female', 'Prefer not to say'][idx] && styles.radioSelected]}>
-                {gender === ['Male', 'Female', 'Prefer not to say'][idx] && <View style={styles.radioDot} />}
+              <View style={[styles.radio, gender === g && styles.radioSelected]}>
+                {gender === g && <View style={styles.radioDot} />}
               </View>
-              <ThemedText style={styles.genderLabel}>{g}</ThemedText>
+              <ThemedText style={styles.genderLabel}>
+                {g === 'Male' ? t('male') :
+                 g === 'Female' ? t('female') :
+                 t('prefer_not_to_say')}
+              </ThemedText>
             </TouchableOpacity>
           ))}
         </View>
+
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={loading}>
           {loading ? (
             <ActivityIndicator color="#fff" />
@@ -127,18 +137,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 10,
-    paddingBottom: 18,
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
+    height: 60,
     backgroundColor: '#fff',
-    borderBottomWidth: 0,
-    borderBottomColor: 'transparent',
-    zIndex: 100, // add this
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   navbarTitle: {
-    fontSize: 24,
+    flex: 1,
+    fontSize: 20,
     fontWeight: '700',
     color: '#111',
+    textAlign: 'center',
   },
   form: {
     padding: 20,
@@ -204,4 +218,4 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
   },
-}); 
+});

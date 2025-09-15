@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -66,6 +66,13 @@ export default function RegisterScreen() {
   const router = useRouter();
   const { t } = useLanguage();
 
+// Clear the field value every time the step changes
+useEffect(() => {
+  const field = FIELDS[step];
+  setValue(field.key, '');   // clear current step's input
+}, [step, setValue]);
+
+
   const handleNext = async (data: any) => {
     setErrorMsg('');
     // Validate current step
@@ -75,6 +82,13 @@ export default function RegisterScreen() {
       setErrorMsg('This field is required');
       return;
     }
+    if (field.key === 'fullname') {
+    const nameRegex = /^[A-Za-z\s]+$/;
+    if (!nameRegex.test(value)) {
+      setErrorMsg('Please enter a valid name (letters only)');
+      return;
+    }
+  }
     if (field.key === 'age' && (isNaN(Number(value)) || Number(value) < 1 || Number(value) > 120)) {
       setErrorMsg('Please enter a valid age');
       return;
@@ -86,7 +100,8 @@ export default function RegisterScreen() {
     setStep((prev) => prev + 1);
   };
 
-  const handleBack = () => {
+
+const handleBack = () => {
     setErrorMsg('');
     if (step === 0) {
       router.back();
@@ -94,6 +109,7 @@ export default function RegisterScreen() {
       setStep((prev) => prev - 1);
     }
   };
+
 
   const onSubmit = (formData: any) => {
     const fullPhone = `${countryCode}${formData.phoneNumber}`;

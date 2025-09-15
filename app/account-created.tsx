@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthRedirect } from '@/hooks/useAuthCheck';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function AccountCreatedScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   useAuthRedirect()
 
   useEffect(() => {
@@ -14,15 +16,15 @@ export default function AccountCreatedScreen() {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [router]);
 
   return (
     <View style={styles.container}>
       <View style={styles.iconWrapper}>
         <Ionicons name="checkmark" size={48} color="white" />
       </View>
-      <Text style={styles.title}>Account Created!</Text>
-      <Text style={styles.subtitle}>You're all set. Welcome aboard!</Text>
+      <Text style={styles.title}>{t('account_created_title')}</Text>
+      <Text style={styles.subtitle}>{t('account_created_subtitle')}</Text>
     </View>
   );
 }

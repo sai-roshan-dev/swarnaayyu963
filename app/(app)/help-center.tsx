@@ -11,30 +11,25 @@ export default function HelpCenterScreen() {
 
   const helpItems = [
     {
-      title: 'Getting Started',
-      description: 'Learn the basics of using Aayu',
+      title: t('getting_started_title'),
+      description: t('getting_started_desc'),
       icon: 'play-circle-outline',
     },
     {
-      title: 'Voice Commands',
-      description: 'How to interact with Aayu using voice',
+      title: t('voice_commands_title'),
+      description: t('voice_commands_desc'),
       icon: 'mic-outline',
     },
     {
-      title: 'Settings & Preferences',
-      description: 'Customize your Aayu experience',
+      title: t('settings_preferences_title'),
+      description: t('settings_preferences_desc'),
       icon: 'settings-outline',
     },
     {
-      title: 'Troubleshooting',
-      description: 'Common issues and solutions',
+      title: t('troubleshooting_title'),
+      description: t('troubleshooting_desc'),
       icon: 'help-circle-outline',
     },
-    // {
-    //   title: 'Contact Support',
-    //   description: 'Get in touch with our support team',
-    //   icon: 'mail-outline',
-    // },
   ];
 
   const handleEmailLink = async () => {
@@ -59,14 +54,14 @@ export default function HelpCenterScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={28} color="#222" />
         </TouchableOpacity>
-        <ThemedText type="title" style={styles.headerTitle}>Help Center</ThemedText>
+        <ThemedText type="title" style={styles.headerTitle}>{t('help_center_title')}</ThemedText>
         <View style={{ width: 28 }} />
       </View>
 
       {/* Content */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <ThemedText style={styles.welcomeText}>
-          Welcome to the Aayu Help Center! Find answers to common questions and learn how to make the most of your AI companion.
+          {t('help_center_welcome')}
         </ThemedText>
 
         <View style={styles.helpItemsContainer}>
@@ -85,13 +80,13 @@ export default function HelpCenterScreen() {
         </View>
 
         <View style={styles.contactSection}>
-          <ThemedText style={styles.contactTitle}>Need More Help?</ThemedText>
+          <ThemedText style={styles.contactTitle}>{t('need_more_help')}</ThemedText>
           <ThemedText style={styles.contactText}>
-            If you can't find what you're looking for, our support team is here to help you.
+            {t('contact_section_text')}
           </ThemedText>
           <TouchableOpacity style={styles.contactButton} onPress={handleEmailLink}>
             <MaterialIcons name="support-agent" size={20} color="#fff" />
-            <ThemedText style={styles.contactButtonText}>Contact Support</ThemedText>
+            <ThemedText style={styles.contactButtonText}>{t('contact_button')}</ThemedText>
           </TouchableOpacity>
         </View>
       </ScrollView>

@@ -17,6 +17,7 @@ import { formatChatTimestamp } from '@/components/utilities/timestampfomat';
 import { Audio } from 'expo-av';
 import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import { useLanguage } from '@/context/LanguageContext';
 import { ThemedText } from '@/components/ThemedText';
 
@@ -79,6 +80,7 @@ const ChatScreen = () => {
   const [page, setPage] = useState(1);
   const [displayedMessages, setDisplayedMessages] = useState<MessageType[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [userTimezone, setUserTimezone] = useState<string>('Asia/Kolkata'); // Default timezone
   const flatListRef = useRef<FlatList<MessageType>>(null);
   const soundRef = useRef<Audio.Sound | null>(null);
   const router = useRouter();
@@ -86,6 +88,83 @@ const ChatScreen = () => {
 
   const { data: chatMessages, isLoading } = useMessages();
   const { mutate: addMessage } = useAddChatMessage();
+
+  // Fetch user timezone from settings API
+  const fetchSettings = async () => {
+    try {
+      const token = await SecureStore.getItemAsync('token');
+      if (!token) {
+        console.log('Authentication token not found, using default timezone');
+        return;
+      }
+
+      const response = await fetch('https://bot.swarnaayu.com/user/settings/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch settings');
+      }
+
+      const data = await response.json();
+      console.log('API settings:', data); // Debugging
+      
+      if (data.time_zone) {
+        setUserTimezone(data.time_zone);
+        console.log('Timezone updated to:', data.time_zone);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user timezone:', error);
+      // Continue with default timezone
+    }
+  };
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  // Helper function to convert timestamp to user's timezone
+  const convertToUserTimezone = (timestamp: string): Date => {
+    if (!userTimezone) {
+      // Fallback to original behavior if no timezone is set
+      return new Date(timestamp);
+    }
+
+    try {
+      // Create a date object from the timestamp
+      const date = new Date(timestamp);
+      
+      // Convert to user's timezone using Intl.DateTimeFormat
+      const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: userTimezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+
+      const parts = formatter.formatToParts(date);
+      const year = parts.find(p => p.type === 'year')?.value;
+      const month = parts.find(p => p.type === 'month')?.value;
+      const day = parts.find(p => p.type === 'day')?.value;
+      const hour = parts.find(p => p.type === 'hour')?.value;
+      const minute = parts.find(p => p.type === 'minute')?.value;
+      const second = parts.find(p => p.type === 'second')?.value;
+
+      // Create a new date in the user's timezone
+      return new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`);
+    } catch (error) {
+      console.error('Error converting timezone:', error);
+      return new Date(timestamp);
+    }
+  };
 
   useEffect(() => {
     if (!Array.isArray(chatMessages)) return;
@@ -134,6 +213,10 @@ const ChatScreen = () => {
 
   const renderMessage = ({ item }: { item: MessageType }) => {
     if (!item.user_message && !item.audio_url) return null;
+    
+    // Convert timestamp to user's timezone before formatting
+    const timezoneAdjustedDate = convertToUserTimezone(item.timestamp);
+    
     return (
       <View style={styles.messagePairContainer}>
         {/* User Message or Audio */}
@@ -152,7 +235,7 @@ const ChatScreen = () => {
                   <Ionicons name="logo-whatsapp" size={16} color="#0b7d37" style={styles.channelIcon} />
                 )}
               </View>
-              {formatChatTimestamp(item.timestamp)}
+              {formatChatTimestamp(timezoneAdjustedDate)}
             </Text>
           </View>
         </View>
@@ -174,7 +257,7 @@ const ChatScreen = () => {
                     <Ionicons name="logo-whatsapp" size={16} color="#0b7d37" style={{ marginRight: 4, marginBottom: -2 }} />
                   )}
                   <Text style={[styles.timestamp, styles.otherTimestamp]}>
-                    {formatChatTimestamp(item.timestamp)}
+                    {formatChatTimestamp(timezoneAdjustedDate)}
                   </Text>
                 </View>
               )}
@@ -346,7 +429,6 @@ const ChatScreen = () => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f0f0f0' },
   navbar: {

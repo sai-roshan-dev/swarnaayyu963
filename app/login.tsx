@@ -33,23 +33,19 @@ export default function LoginScreen() {
     const { phoneNumber } = data;
     const fullPhone = `${countryCode}${phoneNumber}`;
     
-    console.log('phoneNumber in login:', phoneNumber); // Debug: Should log 6305517488
-    console.log('fullPhone in login:', fullPhone); // Debug: Should log +916305517488
     SecureStore.setItemAsync('loginType', 'login');
     SecureStore.setItemAsync('fullPhone', fullPhone); // Save for fallback
     setAccountNotFound(false);
     mutate({ phoneNumber: fullPhone }, { // Send fullPhone instead of data
       onSuccess: (response) => {
-        console.log('Mutation success, params:', { phoneNumber: fullPhone }); // Debug
         router.push({ pathname: '/otp', params: { phoneNumber: String(fullPhone) } });
       },
       onError: (error: any) => {
-        console.log('Mutation error:', error.response?.data, error.message); // Debug
-        if (!error.response?.data?.exists) {
+        if (error.response?.data?.exists === false) {
           setAccountNotFound(true);
         } else {
-          Alert.alert('Login Alert', `Something went wrong!!`, [
-            { text: 'OK', style: 'cancel' },
+          Alert.alert(t('login_alert'), t('something_went_wrong'), [
+            { text: t('ok'), style: 'cancel' },
           ]);
         }
       }
@@ -138,12 +134,12 @@ export default function LoginScreen() {
               <ThemedText style={{ color: 'red', textAlign: 'center', marginBottom: 0 }}></ThemedText>
             ) : accountNotFound ? (
               <ThemedText style={{ color: 'red', textAlign: 'left', marginBottom: 10 }}>
-                {t('account_exists')}. {t('continue_to')}{' '}
+                {t('account_not_found')}{' '}
                 <ThemedText
                   style={{ color: '#e53935', fontWeight: 'bold', textDecorationLine: 'underline' }}
                   onPress={() => router.push('/register')}
                 >
-                  {t('Register')}
+                  {t('register')}
                 </ThemedText>
                 .
               </ThemedText>
@@ -165,7 +161,7 @@ export default function LoginScreen() {
                 style={styles.link}
                 onPress={() => router.push('/register')}
               >
-                {t('Register')}
+                {t('register')}
               </ThemedText>
             </ThemedText>
           </View>
@@ -203,7 +199,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    fontWeight: 500,
+    fontWeight: '500',
     color: '#e6e6fa',
     textAlign: 'center',
     marginBottom: 0,

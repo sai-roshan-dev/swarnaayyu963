@@ -10,6 +10,7 @@ import {
   Alert,
   Modal,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
@@ -19,7 +20,6 @@ import { useTextSize } from '@/context/TextSettingsContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { ThemedText } from '@/components/ThemedText';
 import { setUserCountry, getUserCountry } from '@/utils/country';
-import Constants from 'expo-constants';
 
 // Define types based on context assumptions
 type Language = 'English' | 'Hindi';
@@ -51,7 +51,14 @@ const reverseTextSizeMap: Record<TextSizeType, string> = {
   Large: 'large',
 };
 
-// Define accent and cultural preference mappings (identity mappings since API and context values are the same)
+// Button text size values
+const BUTTON_LABEL_FONT_SIZES: Record<TextSizeType, number> = {
+  Small: 14,
+  Medium: 16,
+  Large: 18,
+};
+
+// Define accent and cultural preference mappings
 const accentMap: Record<string, Accent> = {
   indian: 'indian',
   US: 'US',
@@ -72,52 +79,145 @@ const reverseCulturalPreferenceMap: Record<CulturalPreference, string> = {
   US: 'US',
 };
 
+// Enhanced timezone options with better formatting
+const timezoneOptions = [
+  { 
+    label: 'India (IST)', 
+    value: 'Asia/Kolkata', 
+    tKey: 'india_asia_kolkata',
+    offset: '+05:30',
+    country: 'India'
+  },
+  { 
+    label: 'USA Eastern (EST)', 
+    value: 'America/New_York', 
+    tKey: 'america_new_york',
+    offset: '-05:00',
+    country: 'US'
+  },
+  { 
+    label: 'UK (GMT)', 
+    value: 'Europe/London', 
+    tKey: 'europe_london',
+    offset: '+00:00',
+    country: 'UK'
+  },
+  { 
+    label: 'Australia (AEDT)', 
+    value: 'Australia/Sydney', 
+    tKey: 'australia_sydney',
+    offset: '+11:00',
+    country: 'Australia'
+  },
+  { 
+    label: 'Japan (JST)', 
+    value: 'Asia/Tokyo', 
+    tKey: 'asia_tokyo',
+    offset: '+09:00',
+    country: 'Japan'
+  },
+  { 
+    label: 'Germany (CET)', 
+    value: 'Europe/Berlin', 
+    tKey: 'europe_berlin',
+    offset: '+01:00',
+    country: 'Germany'
+  },
+  { 
+    label: 'Brazil (BRT)', 
+    value: 'America/Sao_Paulo', 
+    tKey: 'america_sao_paulo',
+    offset: '-03:00',
+    country: 'Brazil'
+  },
+];
+
+// Enhanced accent options with descriptions
+const accentOptionsEnhanced = [
+  { 
+    label: 'Indian English', 
+    value: 'indian' as Accent, 
+    description: 'Clear Indian accent for natural conversation',
+    tKey: 'indian'
+  },
+  { 
+    label: 'American English', 
+    value: 'US' as Accent, 
+    description: 'Standard American pronunciation',
+    tKey: 'us_accent'
+  },
+];
+
 export default function SettingsScreen() {
   const [handsFree, setHandsFree] = useState(true);
   const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { siginout } = useAuth();
   const [expanded, setExpanded] = useState<{ [key: string]: boolean }>({});
   const { textSize, setTextSize, getFontSize } = useTextSize();
   const { t, setLanguage, language } = useLanguage();
   const router = useRouter();
+  
+  // Modal states
   const [languageModalVisible, setLanguageModalVisible] = useState(false);
   const [timezoneModalVisible, setTimezoneModalVisible] = useState(false);
   const [countryModalVisible, setCountryModalVisible] = useState(false);
   const [accentModalVisible, setAccentModalVisible] = useState(false);
   const [culturalPreferenceModalVisible, setCulturalPreferenceModalVisible] = useState(false);
+  
+  // Settings states
   const [timezone, setTimezone] = useState('Asia/Kolkata');
   const [country, setCountry] = useState<string>('India');
   const [accent, setAccent] = useState<Accent>('indian');
   const [culturalPreference, setCulturalPreference] = useState<CulturalPreference>('indian');
 
-  const timezoneOptions = [
-    { label: 'India (Asia/Kolkata)', value: 'Asia/Kolkata' },
-    { label: 'USA (America/New_York)', value: 'America/New_York' },
-    { label: 'UK (Europe/London)', value: 'Europe/London' },
-    { label: 'Australia (Australia/Sydney)', value: 'Australia/Sydney' },
-    { label: 'Japan (Asia/Tokyo)', value: 'Asia/Tokyo' },
-    { label: 'Germany (Europe/Berlin)', value: 'Europe/Berlin' },
-    { label: 'Brazil (America/Sao_Paulo)', value: 'America/Sao_Paulo' },
-  ];
+  // Original values for change detection
+  const [originalSettings, setOriginalSettings] = useState({
+    language: 'English' as Language,
+    textSize: 'Medium' as TextSizeType,
+    accent: 'indian' as Accent,
+    culturalPreference: 'indian' as CulturalPreference,
+    timezone: 'Asia/Kolkata',
+    country: 'India',
+  });
 
+  // Track if there are unsaved changes
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Function to check if settings have changed
+  const checkForChanges = () => {
+    const hasChanges = 
+      language !== originalSettings.language ||
+      textSize !== originalSettings.textSize ||
+      accent !== originalSettings.accent ||
+      culturalPreference !== originalSettings.culturalPreference ||
+      timezone !== originalSettings.timezone ||
+      country !== originalSettings.country;
+    
+    setHasUnsavedChanges(hasChanges);
+    return hasChanges;
+  };
+
+  // Enhanced language options
   const languageOptions = [
-    { label: t('English'), value: 'en', contextValue: 'English' as Language },
-    { label: t('Hindi'), value: 'hi', contextValue: 'Hindi' as Language },
+    { label: t('english'), value: 'en', contextValue: 'English' as Language },
+    { label: t('hindi'), value: 'hi', contextValue: 'Hindi' as Language },
   ];
 
   const countryOptions = [
-    { label: t('India'), value: 'India' },
-    { label: t('US'), value: 'US' },
+    { label: t('india'), value: 'India' },
+    { label: t('us_country'), value: 'US' },
   ];
 
   const accentOptions = [
     { label: t('indian'), value: 'indian' as Accent },
-    { label: t('US'), value: 'US' as Accent },
+    { label: t('us_accent'), value: 'US' as Accent },
   ];
 
   const culturalPreferenceOptions = [
     { label: t('indian'), value: 'indian' as CulturalPreference },
-    { label: t('US'), value: 'US' as CulturalPreference },
+    { label: t('us_accent'), value: 'US' as CulturalPreference },
   ];
 
   const countryCodeToTimezone: Record<string, string> = {
@@ -130,25 +230,32 @@ export default function SettingsScreen() {
     '55': 'America/Sao_Paulo', // Brazil
   };
 
+  // Enhanced phone number loading with error handling
   const getPhone = async () => {
     try {
       const phoneNumber = await SecureStore.getItemAsync('phone_number');
       if (phoneNumber) {
         setPhoneNumber(phoneNumber);
+        // Auto-detect timezone from phone number
         const code = phoneNumber.startsWith('+') ? phoneNumber.slice(1, 3) : phoneNumber.slice(0, 2);
         const tz = countryCodeToTimezone[code];
-        if (tz) setTimezone(tz);
+        if (tz && !timezone) { // Only set if timezone is not already set
+          setTimezone(tz);
+        }
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to load phone number.');
+      console.error('Error loading phone number:', error);
+      Alert.alert(t('error'), t('failed_load_phone'));
     }
   };
 
+  // Enhanced settings fetching with better error handling
   const fetchSettings = async () => {
     try {
+      setIsLoading(true);
       const token = await SecureStore.getItemAsync('token');
       if (!token) {
-        Alert.alert('Error', 'Authentication token not found.');
+        Alert.alert(t('error'), t('no_auth_token'));
         return;
       }
 
@@ -161,57 +268,101 @@ export default function SettingsScreen() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch settings');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('API settings:', data); // Debugging
+      console.log('API settings response:', data);
 
-      // Validate and set language
-      const languageValue = data.language && languageMap[data.language] ? languageMap[data.language] : 'English';
+      // Validate and set language with fallback
+      const languageValue = data.language && languageMap[data.language] 
+        ? languageMap[data.language] 
+        : 'English';
       setLanguage(languageValue);
 
-      // Validate and set text size
-      const textSizeValue = data.font_size && textSizeMap[data.font_size.toLowerCase()] ? textSizeMap[data.font_size.toLowerCase()] : 'Medium';
+      // Validate and set text size with fallback
+      const textSizeValue = data.font_size && textSizeMap[data.font_size.toLowerCase()] 
+        ? textSizeMap[data.font_size.toLowerCase()] 
+        : 'Medium';
       setTextSize(textSizeValue);
       await SecureStore.setItemAsync('text_size', textSizeValue);
 
-      // Validate and set accent
-      const accentValue = data.accent && accentMap[data.accent] ? accentMap[data.accent] : 'indian';
+      // Validate and set accent with fallback
+      const accentValue = data.accent && accentMap[data.accent] 
+        ? accentMap[data.accent] 
+        : 'indian';
       setAccent(accentValue);
       await SecureStore.setItemAsync('accent', accentValue);
 
-      // Validate and set cultural preference
-      const culturalPreferenceValue = data.cultural_preference && culturalPreferenceMap[data.cultural_preference] ? culturalPreferenceMap[data.cultural_preference] : 'indian';
+      // Validate and set cultural preference with fallback
+      const culturalPreferenceValue = data.cultural_preference && culturalPreferenceMap[data.cultural_preference] 
+        ? culturalPreferenceMap[data.cultural_preference] 
+        : 'indian';
       setCulturalPreference(culturalPreferenceValue);
       await SecureStore.setItemAsync('cultural_preference', culturalPreferenceValue);
 
-      setTimezone(data.time_zone || 'Asia/Kolkata');
-      setCountry(data.country || 'India');
+      // Set timezone and country with fallbacks
+      const timezoneValue = data.time_zone || 'Asia/Kolkata';
+      setTimezone(timezoneValue);
+      const countryValue = data.country || 'India';
+      setCountry(countryValue);
+      await SecureStore.setItemAsync('user_country', countryValue);
+
+      // Store original values for change detection
+      const originalValues = {
+        language: languageValue,
+        textSize: textSizeValue,
+        accent: accentValue,
+        culturalPreference: culturalPreferenceValue,
+        timezone: timezoneValue,
+        country: countryValue,
+      };
+      setOriginalSettings(originalValues);
+
+      // Reset unsaved changes flag
+      setHasUnsavedChanges(false);
+
     } catch (error) {
-      Alert.alert('Error', 'Failed to load settings from server.');
+      console.error('Error fetching settings:', error);
+      Alert.alert(t('error'), t('failed_load_settings_server'));
+      
       // Fallback to stored values
-      const storedTextSize = await SecureStore.getItemAsync('text_size');
-      if (storedTextSize && ['Small', 'Medium', 'Large'].includes(storedTextSize)) {
-        setTextSize(storedTextSize as TextSizeType);
+      try {
+        const storedTextSize = await SecureStore.getItemAsync('text_size');
+        if (storedTextSize && ['Small', 'Medium', 'Large'].includes(storedTextSize)) {
+          setTextSize(storedTextSize as TextSizeType);
+        }
+        
+        const storedAccent = await SecureStore.getItemAsync('accent');
+        if (storedAccent && ['indian', 'US'].includes(storedAccent)) {
+          setAccent(storedAccent as Accent);
+        }
+        
+        const storedCulturalPreference = await SecureStore.getItemAsync('cultural_preference');
+        if (storedCulturalPreference && ['indian', 'US'].includes(storedCulturalPreference)) {
+          setCulturalPreference(storedCulturalPreference as CulturalPreference);
+        }
+
+        const storedCountry = await SecureStore.getItemAsync('user_country');
+        if (storedCountry) {
+          setCountry(storedCountry);
+        }
+      } catch (storageError) {
+        console.error('Error reading from secure store:', storageError);
       }
-      const storedAccent = await SecureStore.getItemAsync('accent');
-      if (storedAccent && ['indian', 'US'].includes(storedAccent)) {
-        setAccent(storedAccent as Accent);
-      }
-      const storedCulturalPreference = await SecureStore.getItemAsync('cultural_preference');
-      if (storedCulturalPreference && ['indian', 'US'].includes(storedCulturalPreference)) {
-        setCulturalPreference(storedCulturalPreference as CulturalPreference);
-      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Enhanced settings saving with better feedback
   const saveSettings = async () => {
     try {
+      setIsSaving(true);
       const token = await SecureStore.getItemAsync('token');
       if (!token) {
-        Alert.alert('Error', 'Authentication token not found.');
-        return;
+        Alert.alert(t('error'), t('no_auth_token'));
+        return false;
       }
 
       const payload = {
@@ -223,6 +374,8 @@ export default function SettingsScreen() {
         country,
       };
 
+      console.log('Saving settings payload:', payload);
+
       const response = await fetch('https://bot.swarnaayu.com/user/settings/', {
         method: 'POST',
         headers: {
@@ -233,61 +386,170 @@ export default function SettingsScreen() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save settings');
+        const errorData = await response.text();
+        console.error('Save settings error:', errorData);
+        throw new Error(`Failed to save settings: ${response.status}`);
       }
 
-      // Store the updated settings locally
-      await SecureStore.setItemAsync('user_country', country);
-      await SecureStore.setItemAsync('text_size', textSize);
-      await SecureStore.setItemAsync('accent', accent);
+      // Store the updated settings locally with error handling
+      try {
+        await Promise.all([
+          SecureStore.setItemAsync('user_country', country),
+          SecureStore.setItemAsync('text_size', textSize),
+          SecureStore.setItemAsync('accent', accent),
+          SecureStore.setItemAsync('cultural_preference', reverseCulturalPreferenceMap[culturalPreference] || 'indian'),
+          SecureStore.setItemAsync('timezone', timezone),
+          SecureStore.setItemAsync('settings_just_updated', 'true'),
+          SecureStore.setItemAsync('settings_update_timestamp', Date.now().toString()),
+        ]);
+      } catch (storageError) {
+        console.error('Error storing settings locally:', storageError);
+        // Don't fail the save operation for local storage errors
+      }
       
-      // Store the cultural preference with the API format (not the display format)
-      const apiCulturalPreference = reverseCulturalPreferenceMap[culturalPreference] || 'indian';
-      await SecureStore.setItemAsync('cultural_preference', apiCulturalPreference);
+      // Update original settings to current values after successful save
+      setOriginalSettings({
+        language,
+        textSize,
+        accent,
+        culturalPreference,
+        timezone,
+        country,
+      });
+
+      // Reset unsaved changes flag
+      setHasUnsavedChanges(false);
       
-      // Set a flag to indicate settings were just updated to prevent unnecessary API calls
-      await SecureStore.setItemAsync('settings_just_updated', 'true');
-      await SecureStore.setItemAsync('settings_update_timestamp', Date.now().toString());
-      
-      Alert.alert('Success', 'Settings saved successfully.');
+      Alert.alert(t('success'), t('settings_saved_successfully'));
+      return true;
+
     } catch (error) {
-      Alert.alert('Error', 'Failed to save settings.');
+      console.error('Error saving settings:', error);
+      Alert.alert(t('error'), t('failed_save_settings'));
+      return false;
+    } finally {
+      setIsSaving(false);
     }
   };
 
+  // useEffect to detect changes whenever settings change
+  useEffect(() => {
+    checkForChanges();
+  }, [language, textSize, accent, culturalPreference, timezone, country]);
+
+  // Enhanced back navigation with unsaved changes warning
+  const handleBackNavigation = () => {
+    if (hasUnsavedChanges) {
+      Alert.alert(
+        t('unsaved_changes_title'),
+        t('unsaved_changes_message'),
+        [
+          {
+            text: t('cancel'),
+            style: 'cancel',
+          },
+          {
+            text: t('discard_changes'),
+            style: 'destructive',
+            onPress: () => {
+              // Reset to original values
+              setLanguage(originalSettings.language);
+              setTextSize(originalSettings.textSize);
+              setAccent(originalSettings.accent);
+              setCulturalPreference(originalSettings.culturalPreference);
+              setTimezone(originalSettings.timezone);
+              setCountry(originalSettings.country);
+              setHasUnsavedChanges(false);
+              
+              // Navigate back
+              if (router.canGoBack && router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace('/');
+              }
+            },
+          },
+          {
+            text: t('save_and_go_back'),
+            onPress: async () => {
+              try {
+                const success = await saveSettings();
+                if (success) {
+                  if (router.canGoBack && router.canGoBack()) {
+                    router.back();
+                  } else {
+                    router.replace('/');
+                  }
+                }
+              } catch (error) {
+                console.error('Failed to save settings:', error);
+              }
+            },
+          },
+        ]
+      );
+    } else {
+      // No unsaved changes, navigate normally
+      if (router.canGoBack && router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/');
+      }
+    }
+  };
+
+  // Enhanced initialization with better error handling
   useEffect(() => {
     const init = async () => {
       try {
-        // Load stored values as fallback
-        const storedTextSize = await SecureStore.getItemAsync('text_size');
-        if (storedTextSize && ['Small', 'Medium', 'Large'].includes(storedTextSize)) {
-          setTextSize(storedTextSize as TextSizeType);
-        }
-        const storedAccent = await SecureStore.getItemAsync('accent');
-        if (storedAccent && ['indian', 'US'].includes(storedAccent)) {
-          setAccent(storedAccent as Accent);
-        }
-        const storedCulturalPreference = await SecureStore.getItemAsync('cultural_preference');
-        if (storedCulturalPreference && ['indian', 'US'].includes(storedCulturalPreference)) {
-          setCulturalPreference(storedCulturalPreference as CulturalPreference);
+        setIsLoading(true);
+        
+        // Load stored values as fallback first
+        try {
+          const [storedTextSize, storedAccent, storedCulturalPreference, storedCountry] = await Promise.all([
+            SecureStore.getItemAsync('text_size'),
+            SecureStore.getItemAsync('accent'),
+            SecureStore.getItemAsync('cultural_preference'),
+            SecureStore.getItemAsync('user_country'),
+          ]);
+
+          if (storedTextSize && ['Small', 'Medium', 'Large'].includes(storedTextSize)) {
+            setTextSize(storedTextSize as TextSizeType);
+          }
+          if (storedAccent && ['indian', 'US'].includes(storedAccent)) {
+            setAccent(storedAccent as Accent);
+          }
+          if (storedCulturalPreference && ['indian', 'US'].includes(storedCulturalPreference)) {
+            setCulturalPreference(storedCulturalPreference as CulturalPreference);
+          }
+          if (storedCountry) {
+            setCountry(storedCountry);
+          } else {
+            await SecureStore.setItemAsync('user_country', 'India');
+          }
+        } catch (storageError) {
+          console.error('Error loading stored settings:', storageError);
         }
 
+        // Load phone and fetch settings
         await Promise.all([getPhone(), fetchSettings()]);
-        const storedCountry = await SecureStore.getItemAsync('user_country');
-        if (storedCountry) setCountry(storedCountry);
-        else await SecureStore.setItemAsync('user_country', 'India');
+        
       } catch (error) {
-        Alert.alert('Error', 'Failed to initialize settings.');
+        console.error('Error initializing settings:', error);
+        Alert.alert(t('error'), t('failed_initialize_settings'));
+      } finally {
+        setIsLoading(false);
       }
     };
+    
     init();
   }, []);
 
   const handleLogout = () => {
-    Alert.alert('Confirm Logout', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('confirm_logout'), t('logout_message'), [
+      { text: t('cancel'), style: 'cancel' },
       {
-        text: 'Logout',
+        text: t('logout'),
         style: 'destructive',
         onPress: () => {
           siginout();
@@ -300,6 +562,7 @@ export default function SettingsScreen() {
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  // Enhanced SettingRow component
   const SettingRow = ({
     label,
     value,
@@ -310,6 +573,7 @@ export default function SettingsScreen() {
     onToggle,
     icon,
     expandedContent,
+    disabled = false,
   }: {
     label: string;
     value?: string;
@@ -320,29 +584,38 @@ export default function SettingsScreen() {
     onToggle?: () => void;
     icon?: React.ReactNode;
     expandedContent?: React.ReactNode;
+    disabled?: boolean;
   }) => {
     const useRightArrow = [t('edit_profile'), t('my_privacy'), t('about_aayu'), t('help_center')].includes(label);
+    
     return (
       <>
         <TouchableOpacity
           onPress={onPress}
-          activeOpacity={onPress ? 0.6 : 1}
-          style={styles.row}
+          activeOpacity={onPress && !disabled ? 0.6 : 1}
+          style={[styles.row, disabled && styles.rowDisabled]}
+          disabled={disabled}
         >
           <View style={styles.left}>{icon}</View>
           <View style={styles.middle}>
-            <ThemedText style={[styles.label, { fontSize: getFontSize() }]}>{label}</ThemedText>
+            <ThemedText style={[styles.label, { fontSize: getFontSize() }, disabled && styles.labelDisabled]}>
+              {label}
+            </ThemedText>
           </View>
           {isToggle ? (
-            <Switch value={toggleValue} onValueChange={onToggle} />
+            <Switch value={toggleValue} onValueChange={onToggle} disabled={disabled} />
           ) : (
             <View style={styles.right}>
-              {value && <ThemedText style={[styles.value, { fontSize: getFontSize() }]}>{value}</ThemedText>}
+              {value && (
+                <ThemedText style={[styles.value, { fontSize: getFontSize() }, disabled && styles.valueDisabled]}>
+                  {value}
+                </ThemedText>
+              )}
               {hasArrow && (
                 <Ionicons
                   name={useRightArrow ? 'chevron-forward' : 'chevron-down'}
                   size={20}
-                  color="#6c63ff"
+                  color={disabled ? '#ccc' : '#6c63ff'}
                   style={useRightArrow ? undefined : { transform: [{ rotate: expanded[label] ? '180deg' : '0deg' }] }}
                 />
               )}
@@ -354,6 +627,17 @@ export default function SettingsScreen() {
         )}
       </>
     );
+  };
+
+  // Get current timezone display text
+  const getCurrentTimezoneDisplay = () => {
+    const timezoneOption = timezoneOptions.find(tz => tz.value === timezone);
+    return timezoneOption ? `${t(timezoneOption.tKey)} (${timezoneOption.offset})` : timezone;
+  };
+
+  // Get current accent display text
+  const getCurrentAccentDisplay = () => {
+    return accent === 'indian' ? t('indian_english') : t('american_english');
   };
 
   const dynamicStyles = {
@@ -383,35 +667,59 @@ export default function SettingsScreen() {
     },
   };
 
+  if (isLoading) {
+    return (
+     <SafeAreaView style={styles.safeAreaContainer} edges={['top']}>
+        <View style={[styles.container, styles.loadingContainer]}>
+          <ActivityIndicator size="large" color="#6c63ff" />
+          <ThemedText style={styles.loadingText}>{t('loading')}</ThemedText>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <>
-      <View style={styles.navbar}>
-        <TouchableOpacity
-          onPress={() => {
-            if (router.canGoBack && router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace('/');
-            }
-          }}
-          style={{ padding: 8 }}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          accessibilityLabel="Go back"
-        >
-          <Ionicons name="arrow-back" size={28} color="#222" />
-        </TouchableOpacity>
-        <ThemedText style={styles.navbarTitle}>{t('settings')}</ThemedText>
-        <TouchableOpacity
-          onPress={saveSettings}
-          style={{ padding: 8 }}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          accessibilityLabel="Save settings"
-        >
-          <ThemedText style={{ fontSize: getFontSize(), color: '#6c63ff', fontWeight: '600' }}>
-            {t('save')}
-          </ThemedText>
-        </TouchableOpacity>
+    <SafeAreaView style={styles.safeAreaContainer} edges={['top']}>
+      <View style={styles.headerContainer}>
+        <View style={styles.navbar}>
+          {/* Left Item */}
+          <TouchableOpacity
+            onPress={handleBackNavigation}
+            style={styles.navButton}
+            accessibilityLabel={t('back_button')}
+          >
+            <Ionicons name="arrow-back" size={24} color="#222" />
+          </TouchableOpacity>
+          
+          {/* Center Item */}
+          <ThemedText style={styles.navbarTitle} numberOfLines={1}>{t('settings')}</ThemedText>
+
+          {/* Right Item */}
+          <TouchableOpacity
+            onPress={saveSettings}
+            style={[
+              styles.navButton,
+              hasUnsavedChanges && styles.saveButtonActive
+            ]}
+            accessibilityLabel={t('save_settings')}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <ActivityIndicator size="small" color={hasUnsavedChanges ? '#fff' : '#6c63ff'} />
+            ) : (
+              <ThemedText style={[
+                styles.saveButtonText,
+                { fontSize: getFontSize() },
+                hasUnsavedChanges && styles.saveButtonTextActive
+              ]}>
+                {t('save')}
+              </ThemedText>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
+
+      {/* Enhanced Language Selection Modal */}
       <Modal
         visible={languageModalVisible}
         transparent
@@ -420,7 +728,9 @@ export default function SettingsScreen() {
       >
         <Pressable style={styles.modalOverlay} onPress={() => setLanguageModalVisible(false)} />
         <View style={styles.modalContent}>
-          <ThemedText style={[styles.modalTitle, { fontSize: getFontSize() + 2 }]}>{t('main_language')}</ThemedText>
+          <ThemedText style={[styles.modalTitle, { fontSize: getFontSize() + 2 }]}>
+            {t('main_language')}
+          </ThemedText>
           {languageOptions.map((lang) => (
             <TouchableOpacity
               key={lang.value}
@@ -431,7 +741,10 @@ export default function SettingsScreen() {
               }}
             >
               <ThemedText
-                style={[dynamicStyles.modalOptionText, language === lang.contextValue && dynamicStyles.modalOptionTextSelected]}
+                style={[
+                  dynamicStyles.modalOptionText, 
+                  language === lang.contextValue && dynamicStyles.modalOptionTextSelected
+                ]}
               >
                 {lang.label}
               </ThemedText>
@@ -439,6 +752,8 @@ export default function SettingsScreen() {
           ))}
         </View>
       </Modal>
+
+      {/* Enhanced Country Selection Modal */}
       <Modal
         visible={countryModalVisible}
         transparent
@@ -447,7 +762,9 @@ export default function SettingsScreen() {
       >
         <Pressable style={styles.modalOverlay} onPress={() => setCountryModalVisible(false)} />
         <View style={styles.modalContent}>
-          <ThemedText style={[styles.modalTitle, { fontSize: getFontSize() + 2 }]}>{t('country')}</ThemedText>
+          <ThemedText style={[styles.modalTitle, { fontSize: getFontSize() + 2 }]}>
+            {t('country')}
+          </ThemedText>
           {countryOptions.map((c) => (
             <TouchableOpacity
               key={c.value}
@@ -455,13 +772,16 @@ export default function SettingsScreen() {
               onPress={() => {
                 setCountry(c.value as 'India' | 'US');
                 setCountryModalVisible(false);
-                // Update timezone based on country
+                // Auto-update timezone based on country
                 const newTimezone = c.value === 'India' ? 'Asia/Kolkata' : 'America/New_York';
                 setTimezone(newTimezone);
               }}
             >
               <ThemedText
-                style={[dynamicStyles.modalOptionText, country === c.value && dynamicStyles.modalOptionTextSelected]}
+                style={[
+                  dynamicStyles.modalOptionText, 
+                  country === c.value && dynamicStyles.modalOptionTextSelected
+                ]}
               >
                 {c.label}
               </ThemedText>
@@ -469,6 +789,8 @@ export default function SettingsScreen() {
           ))}
         </View>
       </Modal>
+
+      {/* Enhanced Timezone Selection Modal */}
       <Modal
         visible={timezoneModalVisible}
         transparent
@@ -477,25 +799,45 @@ export default function SettingsScreen() {
       >
         <Pressable style={styles.modalOverlay} onPress={() => setTimezoneModalVisible(false)} />
         <View style={styles.modalContent}>
-          <ThemedText style={[styles.modalTitle, { fontSize: getFontSize() + 2 }]}>{t('timezone')}</ThemedText>
-          {timezoneOptions.map((tz) => (
-            <TouchableOpacity
-              key={tz.value}
-              style={[styles.modalOption, timezone === tz.value && styles.modalOptionSelected]}
-              onPress={() => {
-                setTimezone(tz.value);
-                setTimezoneModalVisible(false);
-              }}
-            >
-              <ThemedText
-                style={[dynamicStyles.modalOptionText, timezone === tz.value && dynamicStyles.modalOptionTextSelected]}
+          <ThemedText style={[styles.modalTitle, { fontSize: getFontSize() + 2 }]}>
+            {t('timezone')}
+          </ThemedText>
+          <ScrollView style={styles.modalScrollView} showsVerticalScrollIndicator={false}>
+            {timezoneOptions.map((tz) => (
+              <TouchableOpacity
+                key={tz.value}
+                style={[styles.modalOption, timezone === tz.value && styles.modalOptionSelected]}
+                onPress={() => {
+                  setTimezone(tz.value);
+                  setTimezoneModalVisible(false);
+                }}
               >
-                {t(tz.label.toLowerCase())}
-              </ThemedText>
-            </TouchableOpacity>
-          ))}
+                <View style={styles.timezoneOptionContent}>
+                  <ThemedText
+                    style={[
+                      dynamicStyles.modalOptionText, 
+                      timezone === tz.value && dynamicStyles.modalOptionTextSelected
+                    ]}
+                  >
+                    {t(tz.tKey)}
+                  </ThemedText>
+                  <ThemedText
+                    style={[
+                      styles.timezoneOffset,
+                      { fontSize: getFontSize() - 2 },
+                      timezone === tz.value && { color: '#6c63ff' }
+                    ]}
+                  >
+                    {tz.offset}
+                  </ThemedText>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       </Modal>
+
+      {/* Enhanced Accent Selection Modal */}
       <Modal
         visible={accentModalVisible}
         transparent
@@ -504,8 +846,13 @@ export default function SettingsScreen() {
       >
         <Pressable style={styles.modalOverlay} onPress={() => setAccentModalVisible(false)} />
         <View style={styles.modalContent}>
-          <ThemedText style={[styles.modalTitle, { fontSize: getFontSize() + 2 }]}>{t('accent')}</ThemedText>
-          {accentOptions.map((acc) => (
+          <ThemedText style={[styles.modalTitle, { fontSize: getFontSize() + 2 }]}>
+            {t('accent')}
+          </ThemedText>
+          <ThemedText style={[styles.modalSubtitle, { fontSize: getFontSize() - 1 }]}>
+            {t('accent_selection_subtitle')}
+          </ThemedText>
+          {accentOptionsEnhanced.map((acc) => (
             <TouchableOpacity
               key={acc.value}
               style={[styles.modalOption, accent === acc.value && styles.modalOptionSelected]}
@@ -514,15 +861,31 @@ export default function SettingsScreen() {
                 setAccentModalVisible(false);
               }}
             >
-              <ThemedText
-                style={[dynamicStyles.modalOptionText, accent === acc.value && dynamicStyles.modalOptionTextSelected]}
-              >
-                {acc.label}
-              </ThemedText>
+              <View style={styles.accentOptionContent}>
+                <ThemedText
+                  style={[
+                    dynamicStyles.modalOptionText, 
+                    accent === acc.value && dynamicStyles.modalOptionTextSelected
+                  ]}
+                >
+                  {acc.value === 'indian' ? t('indian_english') : t('american_english')}
+                </ThemedText>
+                <ThemedText
+                  style={[
+                    styles.accentDescription,
+                    { fontSize: getFontSize() - 2 },
+                    accent === acc.value && { color: '#6c63ff' }
+                  ]}
+                >
+                  {acc.value === 'indian' ? t('indian_accent_description') : t('american_accent_description')}
+                </ThemedText>
+              </View>
             </TouchableOpacity>
           ))}
         </View>
       </Modal>
+
+      {/* Enhanced Cultural Preference Modal */}
       <Modal
         visible={culturalPreferenceModalVisible}
         transparent
@@ -531,7 +894,9 @@ export default function SettingsScreen() {
       >
         <Pressable style={styles.modalOverlay} onPress={() => setCulturalPreferenceModalVisible(false)} />
         <View style={styles.modalContent}>
-          <ThemedText style={[styles.modalTitle, { fontSize: getFontSize() + 2 }]}>{t('cultural_preference')}</ThemedText>
+          <ThemedText style={[styles.modalTitle, { fontSize: getFontSize() + 2 }]}>
+            {t('cultural_preference')}
+          </ThemedText>
           {culturalPreferenceOptions.map((cp) => (
             <TouchableOpacity
               key={cp.value}
@@ -542,7 +907,10 @@ export default function SettingsScreen() {
               }}
             >
               <ThemedText
-                style={[dynamicStyles.modalOptionText, culturalPreference === cp.value && dynamicStyles.modalOptionTextSelected]}
+                style={[
+                  dynamicStyles.modalOptionText, 
+                  culturalPreference === cp.value && dynamicStyles.modalOptionTextSelected
+                ]}
               >
                 {cp.label}
               </ThemedText>
@@ -550,51 +918,62 @@ export default function SettingsScreen() {
           ))}
         </View>
       </Modal>
+
       <ScrollView style={styles.container}>
         <ThemedText type="title" style={[styles.sectionTitleMain, { fontSize: getFontSize() + 4 }]}>
           {t('account')}
         </ThemedText>
-        <SettingRow label={t('whatsapp_number')} value={`${phoneNumber ||'loading...'}`} hasArrow={false} />
-        <SettingRow label={t('edit_profile')} onPress={() => router.push('/edit-profile')} hasArrow />
-        <SettingRow label={t('my_privacy')} onPress={() => router.push('/my-privacy')} hasArrow />
+        <SettingRow 
+          label={t('whatsapp_number')} 
+          value={phoneNumber || t('loading')} 
+          hasArrow={false} 
+        />
+        <SettingRow 
+          label={t('edit_profile')} 
+          onPress={() => router.push('/edit-profile')} 
+          hasArrow 
+        />
+        <SettingRow 
+          label={t('my_privacy')} 
+          onPress={() => router.push('/my-privacy')} 
+          hasArrow 
+        />
+
         <ThemedText type="title" style={[styles.sectionTitleMain, { fontSize: getFontSize() + 4 }]}>
           {t('voice_audio')}
         </ThemedText>
-        <SettingRow label={t('microphone_access')} value={t('allowed')} hasArrow={false} />
+        <SettingRow 
+          label={t('microphone_access')} 
+          value={t('allowed')} 
+          hasArrow={false} 
+        />
         <SettingRow
           label={t('accent')}
-          value={t(accent)}
+          value={getCurrentAccentDisplay()}
           onPress={() => setAccentModalVisible(true)}
           hasArrow
         />
+
         <ThemedText type="title" style={[styles.sectionTitleMain, { fontSize: getFontSize() + 4 }]}>
           {t('language')}
         </ThemedText>
         <SettingRow
           label={t('main_language')}
-          value={t(language)}
+          value={t(language.toLowerCase())}
           onPress={() => setLanguageModalVisible(true)}
           hasArrow
         />
-        {expanded['Main Language'] && (
-          <View style={styles.expandedContent}>
-            <ThemedText style={styles.expandedText}>Language selection coming soon.</ThemedText>
-          </View>
-        )}
+
         <ThemedText type="title" style={[styles.sectionTitleMain, { fontSize: getFontSize() + 4 }]}>
           {t('country')}
         </ThemedText>
         <SettingRow
           label={t('country')}
-          value={t(country)}
+          value={t(country.toLowerCase())}
           onPress={() => setCountryModalVisible(true)}
           hasArrow
         />
-        {expanded['Country'] && (
-          <View style={styles.expandedContent}>
-            <ThemedText style={styles.expandedText}>Country selection coming soon.</ThemedText>
-          </View>
-        )}
+
         <ThemedText type="title" style={[styles.sectionTitleMain, { fontSize: getFontSize() + 4 }]}>
           {t('cultural_preference')}
         </ThemedText>
@@ -604,6 +983,7 @@ export default function SettingsScreen() {
           onPress={() => setCulturalPreferenceModalVisible(true)}
           hasArrow
         />
+
         <ThemedText type="title" style={[styles.sectionTitleMain, { fontSize: getFontSize() + 4 }]}>
           {t('text_size')}
         </ThemedText>
@@ -614,70 +994,124 @@ export default function SettingsScreen() {
               style={[styles.textSizeButton, textSize === size && styles.textSizeButtonActive]}
               onPress={() => {
                 setTextSize(size);
-                console.log(`Text size set to: ${size}`); // Debugging
+                console.log(`Text size set to: ${size}`);
               }}
             >
-              <ThemedText
-                style={[styles.textSizeButtonText, textSize === size && styles.textSizeButtonTextActive, { fontSize: getFontSize() }]}
+              <ThemedText 
+                style={[
+                  styles.textSizeButtonText,
+                  textSize === size && styles.textSizeButtonTextActive,
+                  { fontSize: BUTTON_LABEL_FONT_SIZES[size] },
+                ]}
               >
                 {t(size.toLowerCase())}
               </ThemedText>
             </TouchableOpacity>
           ))}
         </View>
+
         <ThemedText type="title" style={[styles.sectionTitleMain, { fontSize: getFontSize() + 4 }]}>
           {t('timezone')}
         </ThemedText>
         <SettingRow
           label={t('current_timezone')}
-          value={timezoneOptions.find((tz) => tz.value === timezone)?.label || timezone}
+          value={getCurrentTimezoneDisplay()}
           onPress={() => setTimezoneModalVisible(true)}
           hasArrow
         />
-        {expanded['Timezone'] && (
-          <View style={styles.expandedContent}>
-            <ThemedText style={styles.expandedText}>Timezone selection coming soon.</ThemedText>
-          </View>
-        )}
+
         <ThemedText type="title" style={[styles.sectionTitleMain, { fontSize: getFontSize() + 4 }]}>
           {t('support')}
         </ThemedText>
-        <SettingRow label={t('help_center')} onPress={() => router.push('/help-center')} hasArrow />
-        <SettingRow label={t('about_aayu')} onPress={() => router.push('/about-aayu')} hasArrow />
+        <SettingRow 
+          label={t('help_center')} 
+          onPress={() => router.push('/help-center')} 
+          hasArrow 
+        />
+        <SettingRow 
+          label={t('about_aayu')} 
+          onPress={() => router.push('/about-aayu')} 
+          hasArrow 
+        />
+
         <TouchableOpacity style={styles.logout} onPress={handleLogout}>
           <MaterialIcons name="logout" size={24} color="#e53935" />
           <ThemedText style={styles.logoutText}>{t('logout')}</ThemedText>
         </TouchableOpacity>
+
+        {/* Unsaved changes indicator */}
+        {hasUnsavedChanges && (
+          <View style={styles.unsavedChangesIndicator}>
+            <Ionicons name="warning-outline" size={16} color="#ff9800" />
+            <ThemedText style={styles.unsavedChangesText}>
+              {t('unsaved_changes_warning')}
+            </ThemedText>
+          </View>
+        )}
       </ScrollView>
-    </>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeAreaContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  headerContainer: {
+  backgroundColor: '#fff',
+  borderBottomWidth: 1,
+  borderBottomColor: '#eee',
+  marginTop: -40, // Add this line
+},
   container: {
+    flex: 1,
     paddingHorizontal: 20,
     backgroundColor: '#fff',
-    flex: 1,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
   },
   navbar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 10,
-    paddingBottom: 18,
-    paddingHorizontal: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 0,
-    borderBottomColor: 'transparent',
+    height: 50, // CHANGE: Reduced height for a more compact header
+    paddingHorizontal: 10,
+  },
+  navButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   navbarTitle: {
+    flex: 1,
+    textAlign: 'center',
     fontSize: 26,
     fontWeight: '700',
     color: '#111',
-    textAlign: 'center',
-    flex: 1,
-    marginLeft: -28, // visually center with back arrow
+    // CHANGE: Adjusted padding and line height for the new navbar height
+    paddingTop: 4, 
+    lineHeight: 30, 
   },
+  saveButtonActive: {
+    //add our style removing due to size issue of large text
+  },
+  saveButtonText: {
+    color: '#6c63ff',
+    fontWeight: '600',
+  },
+  saveButtonTextActive: {
+    //add our style removing due to size issue of large text
+  },
+
   sectionTitleMain: {
     marginTop: 20,
     marginBottom: 0,
@@ -700,6 +1134,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     paddingHorizontal: 0,
   },
+  rowDisabled: {
+    opacity: 0.5,
+  },
   left: {
     marginRight: 12,
   },
@@ -709,6 +1146,9 @@ const styles = StyleSheet.create({
   label: {
     color: '#222',
     fontWeight: '500',
+  },
+  labelDisabled: {
+    color: '#999',
   },
   right: {
     flexDirection: 'row',
@@ -720,6 +1160,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginRight: 4,
     fontWeight: '500',
+  },
+  valueDisabled: {
+    color: '#ccc',
   },
   expandedContent: {
     backgroundColor: '#f7f7f7',
@@ -789,6 +1232,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 8,
+    maxHeight: '70%',
+  },
+  modalScrollView: {
+    maxHeight: 300,
   },
   modalTitle: {
     fontSize: 20,
@@ -796,6 +1243,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     color: '#222',
     textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 16,
   },
   modalOption: {
     paddingVertical: 14,
@@ -817,5 +1270,39 @@ const styles = StyleSheet.create({
   modalOptionTextSelected: {
     color: '#6c63ff',
     fontWeight: '700',
+  },
+  timezoneOptionContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  timezoneOffset: {
+    color: '#666',
+    fontSize: 14,
+  },
+  accentOptionContent: {
+    alignItems: 'center',
+  },
+  accentDescription: {
+    color: '#666',
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  unsavedChangesIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#fff3e0',
+    borderRadius: 8,
+    marginVertical: 16,
+    gap: 8,
+  },
+  unsavedChangesText: {
+    color: '#ff9800',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

@@ -103,18 +103,28 @@ export default function MyPrivacyScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* Fixed Header with proper navbar structure */}
       <View style={styles.header}>
+        {/* Left: Back Button */}
         <TouchableOpacity
+          style={styles.backButton}
           onPress={() => router.back()}
           accessibilityLabel={t('back_button')}
           accessibilityRole="button"
+          activeOpacity={0.7}
         >
-          <Ionicons name="arrow-back" size={28} color="#222" />
+          <Ionicons name="arrow-back" size={24} color="#222" />
         </TouchableOpacity>
-        <ThemedText type="title" style={styles.headerTitle}>{t('my_privacy')}</ThemedText>
-        <View style={{ width: 28 }} />
+        
+        {/* Center: Title */}
+        <ThemedText type="title" style={styles.headerTitle}>
+          {t('my_privacy')}
+        </ThemedText>
+        
+        {/* Right: Placeholder for balance */}
+        <View style={styles.rightPlaceholder} />
       </View>
+
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
        
         <ThemedText style={styles.paragraph}>{t('welcome_intro')}</ThemedText>
@@ -195,6 +205,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  // Updated header styles following the solution
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -206,10 +217,29 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
+  // Left: Back button with 44x44 touch target
+  backButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Center: Title with flex: 1 and textAlign: 'center'
   headerTitle: {
+    flex: 1,
+    textAlign: 'center',
     fontSize: 24,
     fontWeight: '700',
     color: '#111',
+    lineHeight: 36, // Much larger line height for Hindi diacritics
+    paddingVertical: 8, // More padding to ensure no clipping
+    paddingTop: 5, // Extra top padding specifically for diacritics
+    includeFontPadding: false, // Remove Android default padding
+    textAlignVertical: 'center', // Center vertically on Android
+  },
+  // Right: Placeholder with same width as back button
+  rightPlaceholder: {
+    width: 44,
   },
   scrollView: {
     flex: 1,
