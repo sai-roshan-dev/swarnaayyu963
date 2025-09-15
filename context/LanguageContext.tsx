@@ -273,7 +273,24 @@ const translations: Translations = {
   "failed_initialize_settings": "Failed to initialize settings.",
   "save_settings": "Save Settings",
   "back_button": "Back",
-
+"today": "Today",
+"yesterday": "Yesterday",
+"at": "at",
+"invalid_date": "Invalid date",
+"monthNames": {
+    "0": "Jan",
+    "1": "Feb",
+    "2": "Mar",
+    "3": "Apr",
+    "4": "May",
+    "5": "Jun",
+    "6": "Jul",
+    "7": "Aug",
+    "8": "Sep",
+    "9": "Oct",
+    "10": "Nov",
+    "11": "Dec"
+},
     // Register
     register: {
       prompt_fullname: "Great to see you!\nWhat’s your name?",
@@ -527,6 +544,25 @@ const translations: Translations = {
   "failed_initialize_settings": "सेटिंग्स प्रारंभ करने में विफल।",
   "save_settings": "सेटिंग्स सहेजें",
   "back_button": "वापस",
+  //chatscreen messages
+  "today": "आज",
+"yesterday": "कल",
+"at": "को",
+"invalid_date": "अमान्य दिनांक",
+"monthNames": {
+    "0": "जनवरी",
+    "1": "फ़रवरी",
+    "2": "मार्च",
+    "3": "अप्रैल",
+    "4": "मई",
+    "5": "जून",
+    "6": "जुलाई",
+    "7": "अगस्त",
+    "8": "सितंबर",
+    "9": "अक्टूबर",
+    "10": "नवंबर",
+    "11": "दिसंबर"
+},
     // Register
     register: {
       prompt_fullname: "आपसे मिलकर अच्छा लगा!\nआपका नाम क्या है?",

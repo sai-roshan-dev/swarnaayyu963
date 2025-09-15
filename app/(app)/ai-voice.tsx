@@ -7,13 +7,12 @@ import { useRouter } from 'expo-router';
 import { useBackExit } from '@/hooks/useBackClick';
 import { useConversation } from '@11labs/react';
 import { getSignedUrl } from '@/utils/api';
-import { useLanguage } from '@/context/LanguageContext';
 
 export default function AiVoice() {
+  console.log("Ai file rendered");
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<'idle' | 'connecting' | 'listening' | 'mic-off' | 'speaking'>('idle');
   const router = useRouter();
-  const { t } = useLanguage();
   useBackExit();
   useAuthRedirect();
 
@@ -104,10 +103,9 @@ export default function AiVoice() {
 
       {isLoading && (
         <View style={styles.loadingContainer}>
-From https://github.com/Balajinaga007/Swarnaayuapp
           <ActivityIndicator size="large" />
           <Text style={styles.loadingText}>
-            {status === 'connecting' ? t('connecting_to_ai') : t('processing')}
+            {status === 'connecting' ? 'Connecting to AI...' : 'Processing...'}
           </Text>
         </View>
       )}

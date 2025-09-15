@@ -89,17 +89,24 @@ import { isToday, isYesterday } from 'date-fns';
 
 //import { isToday, isYesterday } from 'date-fns';
 
+type Language = 'English' | 'Hindi';
+
 /**
  * Formats a timestamp for chat messages based on the device's local time zone
- * 
- * @param input - ISO string or Date object representing the timestamp (assumed to be in UTC)
+ * * @param input - ISO string or Date object representing the timestamp (assumed to be in UTC)
+ * @param t - The translation function from the LanguageContext.
+ * @param language - The current language from the LanguageContext.
  * @returns Formatted string like "Today at 2:30 PM", "Yesterday at 5:45 PM", or "15 May at 10:30 AM"
  */
-export const formatChatTimestamp = (input: string | Date | undefined | null): string => {
+export const formatChatTimestamp = (
+  input: string | Date | undefined | null,
+  t: (key: string) => string,
+  language: Language
+): string => {
   // Handle undefined or null input
   if (!input) {
     console.warn('No timestamp provided to formatChatTimestamp');
-    return 'Invalid date';
+    return t('invalid_date');
   }
 
   // Ensure we have a valid Date object
@@ -119,18 +126,20 @@ export const formatChatTimestamp = (input: string | Date | undefined | null): st
     }
   } else {
     console.error('Invalid input type provided to formatChatTimestamp:', typeof input);
-    return 'Invalid date';
+    return t('invalid_date');
   }
   
   // Check if the date is valid
   if (isNaN(date.getTime())) {
     console.error('Invalid date provided to formatChatTimestamp:', input);
-    return 'Invalid date';
+    return t('invalid_date');
   }
   
+  const locale = language === 'Hindi' ? 'hi-IN' : 'en-US';
+  
   // Format time in the device's local time zone
-  const timeFormatter = new Intl.DateTimeFormat(undefined, {
-    hour: '2-digit',
+  const timeFormatter = new Intl.DateTimeFormat(locale, {
+    hour: 'numeric',
     minute: '2-digit',
     hour12: true,
   });
@@ -149,22 +158,18 @@ export const formatChatTimestamp = (input: string | Date | undefined | null): st
   
   // Check if the date matches today or yesterday in local time
   if (dateStartOfDay.getTime() === localToday.getTime()) {
-    return `Today at ${formattedTime}`;
+    return `${t('today')} ${t('at')} ${formattedTime}`;
   }
   
   if (dateStartOfDay.getTime() === localYesterday.getTime()) {
-    return `Yesterday at ${formattedTime}`;
+    return `${t('yesterday')} ${t('at')} ${formattedTime}`;
   }
   
   // Format date for other cases
-  const dateFormatter = new Intl.DateTimeFormat(undefined, {
-    day: 'numeric',
-    month: 'short',
-  });
+  const month = t(`monthNames.${date.getMonth()}`);
+  const day = date.getDate();
   
-  const formattedDate = dateFormatter.format(date);
-  
-  return `${formattedDate} at ${formattedTime}`;
+  return `${day} ${month} ${t('at')} ${formattedTime}`;
 };
 
 // Example usage:

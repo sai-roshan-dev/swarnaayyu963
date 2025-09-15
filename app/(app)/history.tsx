@@ -84,7 +84,7 @@ const ChatScreen = () => {
   const flatListRef = useRef<FlatList<MessageType>>(null);
   const soundRef = useRef<Audio.Sound | null>(null);
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const { data: chatMessages, isLoading } = useMessages();
   const { mutate: addMessage } = useAddChatMessage();
@@ -235,7 +235,7 @@ const ChatScreen = () => {
                   <Ionicons name="logo-whatsapp" size={16} color="#0b7d37" style={styles.channelIcon} />
                 )}
               </View>
-              {formatChatTimestamp(timezoneAdjustedDate)}
+              {formatChatTimestamp(timezoneAdjustedDate, t, language)}
             </Text>
           </View>
         </View>
@@ -257,7 +257,7 @@ const ChatScreen = () => {
                     <Ionicons name="logo-whatsapp" size={16} color="#0b7d37" style={{ marginRight: 4, marginBottom: -2 }} />
                   )}
                   <Text style={[styles.timestamp, styles.otherTimestamp]}>
-                    {formatChatTimestamp(timezoneAdjustedDate)}
+                    {formatChatTimestamp(timezoneAdjustedDate, t, language)}
                   </Text>
                 </View>
               )}
