@@ -19,10 +19,11 @@ export default function SplashScreen() {
   const { isAuthenticated } = useAuth();
   const animationRef = useRef<LottieView>(null);
   const [animationFinished, setAnimationFinished] = useState(false);
-
+  
   const navigateToNextScreen = async () => {
     const onboarding = await SecureStore.getItemAsync('onboardingComplete');
     console.log('isAuthenticated:', isAuthenticated, 'onboarding:', onboarding);
+    ;
     if (isAuthenticated) {
       router.replace('/(app)');
     } else if (onboarding === 'true') {

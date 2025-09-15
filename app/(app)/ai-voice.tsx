@@ -104,6 +104,7 @@ export default function AiVoice() {
 
       {isLoading && (
         <View style={styles.loadingContainer}>
+From https://github.com/Balajinaga007/Swarnaayuapp
           <ActivityIndicator size="large" />
           <Text style={styles.loadingText}>
             {status === 'connecting' ? t('connecting_to_ai') : t('processing')}

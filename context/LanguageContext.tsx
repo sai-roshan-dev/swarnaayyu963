@@ -259,26 +259,20 @@ const translations: Translations = {
   'american_english': 'American English',
   'indian_accent_description': 'Clear Indian accent for natural conversation',
   'american_accent_description': 'Standard American pronunciation',
-  //new added values
-  // alert messages in settings key values
-'failed_load_phone': 'Failed to load phone number.',
-'no_auth_token': 'Authentication token not found.',
-'failed_load_settings_server': 'Failed to load settings from server. Using local settings.',
-'failed_save_settings': 'Failed to save settings. Please try again.',
-'settings_saved_successfully': 'Settings saved successfully.',
-'unsaved_changes_title': 'Unsaved Changes',
-'unsaved_changes_message': 'You have unsaved changes. What would you like to do?',
-'discard_changes': 'Discard Changes',
-'save_and_go_back': 'Save & Go Back',
-'failed_initialize_settings': 'Failed to initialize settings.',
-'back_button': 'Go back',
-'save_settings': 'Save settings',
-//edit profile extra key values in errors
-'no_auth_token_login_again': 'No auth token found. Please log in again.',
-'profile_updated_successfully': 'Profile updated successfully!',
-'failed_update_profile': 'Failed to update profile.',
-'error_occurred_try_again': 'An error occurred. Please try again.',
-//extra values
+  //new added setting alert values
+  
+  "failed_load_phone": 'Failed to load phone number.',
+  "no_auth_token": "No authentication token found.",
+  "failed_load_settings_server": "Failed to load settings from the server.",
+  "settings_saved_successfully": "Settings saved successfully.",
+  "failed_save_settings": "Failed to save settings.",
+  "unsaved_changes_title": "Unsaved Changes",
+  "unsaved_changes_message": "You have unsaved changes. What would you like to do?",
+  "discard_changes": "Discard Changes",
+  "save_and_go_back": "Save & Go Back",
+  "failed_initialize_settings": "Failed to initialize settings.",
+  "save_settings": "Save Settings",
+  "back_button": "Back",
 
     // Register
     register: {
@@ -520,46 +514,19 @@ const translations: Translations = {
   'american_english': 'अमेरिकी अंग्रेजी',
   'indian_accent_description': 'प्राकृतिक बातचीत के लिए स्पष्ट भारतीय लहजा',
   'american_accent_description': 'मानक अमेरिकी उच्चारण',
-  //my-privacy key values
-  "welcome_intro": "आयु में आपका स्वागत है! आपकी गोपनीयता हमारे लिए महत्वपूर्ण है। यह गोपनीयता नीति बताती है कि जब आप हमारी सेवाओं का उपयोग करते हैं तो हम आपके व्यक्तिगत डेटा को कैसे एकत्रित, उपयोग और सुरक्षित करते हैं।",
-
-"info_we_collect": "हम जो जानकारी एकत्रित करते हैं",
-
-"personal_info": "व्यक्तिगत जानकारी",
-"personal_info_desc": "साइन अप करते समय आपके द्वारा प्रदान किया गया नाम, ईमेल और अन्य विवरण।",
-
-"usage_data": "उपयोग डेटा", 
-"usage_data_desc": "आयु के साथ बातचीत, वॉइस इनपुट, संदेश, प्राथमिकताएं और डिवाइस जानकारी सहित।",
-
-"third_party_data": "तृतीय-पक्ष डेटा",
-"third_party_data_desc": "यदि आप बाहरी सेवाओं को कनेक्ट करते हैं, तो हम अनुमति के अनुसार संबंधित डेटा तक पहुंच सकते हैं।",
-
-"how_we_use_info": "हम आपकी जानकारी का उपयोग कैसे करते हैं",
-
-"provide_personalize_app": "ऐप अनुभव प्रदान करना, व्यक्तिगत बनाना और सुधारना।",
-"help_reminders_conversations": "अनुस्मारक, बातचीत और उपयोगी दैनिक बातचीत में आपकी सहायता करना।",
-"support_secure_experience": "आपके अनुरोधों का समर्थन करना और आपके अनुभव को सुरक्षित रखना।",
-"analyze_usage_patterns": "ऐप प्रदर्शन और विश्वसनीयता में सुधार के लिए उपयोग पैटर्न का विश्लेषण करना।",
-
-"last_updated": "अंतिम अपडेट",
-//setting alert hindi key values
-'failed_load_phone': 'फोन नंबर लोड करने में विफल।',
-'no_auth_token': 'प्रामाणीकरण टोकन नहीं मिला।',
-'failed_load_settings_server': 'सर्वर से सेटिंग्स लोड करने में विफल। स्थानीय सेटिंग्स का उपयोग कर रहे हैं।',
-'failed_save_settings': 'सेटिंग्स सेव करने में विफल। कृपया पुनः प्रयास करें।',
-'settings_saved_successfully': 'सेटिंग्स सफलतापूर्वक सेव की गईं।',
-'unsaved_changes_title': 'असहेजे गए परिवर्तन',
-'unsaved_changes_message': 'आपके पास असहेजे गए परिवर्तन हैं। आप क्या करना चाहेंगे?',
-'discard_changes': 'परिवर्तन रद्द करें',
-'save_and_go_back': 'सेव करें और वापस जाएं',
-'failed_initialize_settings': 'सेटिंग्स को प्रारंभ करने में विफल।',
-'back_button': 'वापस जाएं',
-'save_settings': 'सेटिंग्स सेव करें',
- // edit profile extra features in the key values
- 'no_auth_token_login_again': 'कोई प्रामाणीकरण टोकन नहीं मिला। कृपया फिर से लॉग इन करें।',
-'profile_updated_successfully': 'प्रोफाइल सफलतापूर्वक अपडेट हो गया!',
-'failed_update_profile': 'प्रोफाइल अपडेट करने में विफल।',
-'error_occurred_try_again': 'एक त्रुटि हुई। कृपया पुनः प्रयास करें।',
+  // new added key values
+  "failed_load_phone": "फ़ोन नंबर लोड करने में विफल।",
+  "no_auth_token": "कोई प्रमाणीकरण टोकन नहीं मिला।",
+  "failed_load_settings_server": "सर्वर से सेटिंग्स लोड करने में विफल।",
+  "settings_saved_successfully": "सेटिंग्स सफलतापूर्वक सहेजी गईं।",
+  "failed_save_settings": "सेटिंग्स सहेजने में विफल।",
+  "unsaved_changes_title": "अपरिवर्तित परिवर्तन",
+  "unsaved_changes_message": "आपके पास असहेजे गए परिवर्तन हैं। आप क्या करना चाहेंगे?",
+  "discard_changes": "परिवर्तनों को त्यागें",
+  "save_and_go_back": "सहेजें और वापस जाएं",
+  "failed_initialize_settings": "सेटिंग्स प्रारंभ करने में विफल।",
+  "save_settings": "सेटिंग्स सहेजें",
+  "back_button": "वापस",
     // Register
     register: {
       prompt_fullname: "आपसे मिलकर अच्छा लगा!\nआपका नाम क्या है?",

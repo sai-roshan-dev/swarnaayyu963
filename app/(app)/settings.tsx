@@ -245,7 +245,7 @@ export default function SettingsScreen() {
       }
     } catch (error) {
       console.error('Error loading phone number:', error);
-      Alert.alert(t('error'), t('failed_load_phone'));
+      Alert.alert(t('error'), t('failed_load_phone'), [{ text: t('ok') }]);
     }
   };
 
@@ -255,18 +255,11 @@ export default function SettingsScreen() {
       setIsLoading(true);
       const token = await SecureStore.getItemAsync('token');
       if (!token) {
-        Alert.alert(t('error'), t('no_auth_token'));
+        Alert.alert(t('error'), t('no_auth_token'), [{ text: t('ok') }]);
         return;
       }
 
-      const response = await fetch('https://bot.swarnaayu.com/user/settings/', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
-        },
-      });
-
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -324,7 +317,7 @@ export default function SettingsScreen() {
 
     } catch (error) {
       console.error('Error fetching settings:', error);
-      Alert.alert(t('error'), t('failed_load_settings_server'));
+      Alert.alert(t('error'), t('failed_load_settings_server'), [{ text: t('ok') }]);
       
       // Fallback to stored values
       try {
@@ -361,7 +354,7 @@ export default function SettingsScreen() {
       setIsSaving(true);
       const token = await SecureStore.getItemAsync('token');
       if (!token) {
-        Alert.alert(t('error'), t('no_auth_token'));
+        Alert.alert(t('error'), t('no_auth_token'), [{ text: t('ok') }]);
         return false;
       }
 
@@ -420,12 +413,12 @@ export default function SettingsScreen() {
       // Reset unsaved changes flag
       setHasUnsavedChanges(false);
       
-      Alert.alert(t('success'), t('settings_saved_successfully'));
+      Alert.alert(t('success'), t('settings_saved_successfully'), [{ text: t('ok') }]);
       return true;
 
     } catch (error) {
       console.error('Error saving settings:', error);
-      Alert.alert(t('error'), t('failed_save_settings'));
+      Alert.alert(t('error'), t('failed_save_settings'), [{ text: t('ok') }]);
       return false;
     } finally {
       setIsSaving(false);
@@ -536,7 +529,7 @@ export default function SettingsScreen() {
         
       } catch (error) {
         console.error('Error initializing settings:', error);
-        Alert.alert(t('error'), t('failed_initialize_settings'));
+        Alert.alert(t('error'), t('failed_initialize_settings'), [{ text: t('ok') }]);
       } finally {
         setIsLoading(false);
       }
