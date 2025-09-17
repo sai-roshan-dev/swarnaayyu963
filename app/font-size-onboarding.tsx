@@ -79,12 +79,18 @@ const styles = StyleSheet.create({
   },
   question: {
     fontSize: 32,
+
+    
     fontWeight: '700',
     color: '#111',
     textAlign: 'center',
     marginBottom: 48,
-    marginTop: -50,
+    marginTop: -30,
     lineHeight: 40,
+    paddingVertical: 8,
+    paddingTop: 5,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   radioGroup: {
     width: width * 0.7,

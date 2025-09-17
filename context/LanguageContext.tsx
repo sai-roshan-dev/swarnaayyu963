@@ -291,6 +291,7 @@ const translations: Translations = {
     "10": "Nov",
     "11": "Dec"
 },
+
     // Register
     register: {
       prompt_fullname: "Great to see you!\nWhat’s your name?",
@@ -379,7 +380,8 @@ const translations: Translations = {
     'profile': 'प्रोफाइल',
     // Auth
     'login': 'लॉगिन',
-    'Register': 'पंजीकरण',
+    //'register': 'पंजीकरण',
+   'register': 'रजिस्टर करें',
     'welcome': 'स्वागत है',
     'login_subtitle': 'Aayu के साथ अपनी यात्रा जारी रखने के लिए लॉगिन करें।',
     'is_required': 'आवश्यक है',
@@ -417,9 +419,9 @@ const translations: Translations = {
       desc_2: 'उन्नत AI तकनीक के साथ प्राकृतिक बातचीत',
       title_3: 'शुरू करें',
       desc_3: 'आज ही आयु के साथ अपनी यात्रा शुरू करें',
-      skip: 'Skip',
-      next: 'Next',
-      get_started: 'Get Started',
+      "skip": "छोड़ें",
+      "next": "अगला",
+      "get_started": "शुरू करें"
     },
     // About
     'about': 'के बारे में',
@@ -514,6 +516,7 @@ const translations: Translations = {
     //'phone_required': 'फ़ोन नंबर आवश्यक है।',
     //'phone_digits': 'फ़ोन नंबर कम से कम 8 अंकों का होना चाहिए।',
     //'login': 'लॉग इन करें',
+    "register_button": "रजिस्टर करें",
     //'register': 'रजिस्टर करें',
     //'dont_have_account': 'क्या आपका खाता नहीं है?',
     'account_not_found': 'खाता नहीं मिला। कृपया',
@@ -563,6 +566,30 @@ const translations: Translations = {
     "10": "नवंबर",
     "11": "दिसंबर"
 },
+// extra key values
+"secure_store_error": "सुरक्षित स्टोर तक नहीं पहुंच सका।",
+  "confirm_delete_title": "हटाने की पुष्टि करें",
+  "confirm_delete_message": "क्या आप वाकई अपना खाता हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।",
+  "account_deleted_success": "आपका खाता सफलतापूर्वक हटा दिया गया है।",
+  "delete_account_failed": "खाता हटाने में विफल। कृपया बाद में पुन: प्रयास करें।",
+  "contact_email": "ईमेल के माध्यम से हमसे संपर्क करें",
+  //"delete": "हटाएं",
+  // my privacy key values
+  "info_we_collect": "हम जो जानकारी एकत्र करते हैं",
+  "personal_info": "व्यक्तिगत जानकारी",
+  "personal_info_desc": "साइन अप करते समय आपके द्वारा प्रदान किया गया नाम, ईमेल और अन्य विवरण।",
+  "usage_data": "उपयोग डेटा",
+  "usage_data_desc": "आयु के साथ आपकी बातचीत, जिसमें वॉयस इनपुट, संदेश, प्राथमिकताएं और डिवाइस की जानकारी शामिल है।",
+  "third_party_data": "तृतीय-पक्ष डेटा",
+  "third_party_data_desc": "यदि आप बाहरी सेवाओं को जोड़ते हैं, तो हम अनुमति के अनुसार प्रासंगिक डेटा तक पहुंच सकते हैं।",
+  "how_we_use_info": "हम आपकी जानकारी का उपयोग कैसे करते हैं",
+  "provide_personalize_app": "ऐप अनुभव को प्रदान करना, वैयक्तिकृत करना और सुधारना।",
+  "help_reminders_conversations": "अनुस्मारक, बातचीत और उपयोगी दैनिक बातचीत में आपकी सहायता करना।",
+  "support_secure_experience": "आपके अनुरोधों का समर्थन करना और आपके अनुभव को सुरक्षित रखना।",
+  "analyze_usage_patterns": "ऐप के प्रदर्शन और विश्वसनीयता में सुधार के लिए उपयोग पैटर्न का विश्लेषण करना।",
+  "welcome_intro": "आयु में आपका स्वागत है! आपकी गोपनीयता हमारे लिए महत्वपूर्ण है। यह गोपनीयता नीति बताती है कि जब आप हमारी सेवाओं का उपयोग करते हैं तो हम आपके व्यक्तिगत डेटा को कैसे एकत्र करते हैं, उसका उपयोग करते हैं और उसकी सुरक्षा करते हैं।"
+,
+"register_button": "रजिस्टर करें",
     // Register
     register: {
       prompt_fullname: "आपसे मिलकर अच्छा लगा!\nआपका नाम क्या है?",

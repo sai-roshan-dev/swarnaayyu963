@@ -52,9 +52,9 @@ export default function EditProfileScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      {/* Header */}
-      <View style={styles.navbar}>
-        {/* Back Button */}
+      {/* Fixed Header with proper navbar structure */}
+      <View style={styles.header}>
+        {/* Left: Back Button */}
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => {
@@ -64,19 +64,20 @@ export default function EditProfileScreen() {
               router.replace('/');
             }
           }}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           accessibilityLabel={t('back_button')}
+          accessibilityRole="button"
+          activeOpacity={0.7}
         >
-          <Ionicons name="arrow-back" size={28} color="#222" />
+          <Ionicons name="arrow-back" size={24} color="#222" />
         </TouchableOpacity>
 
-        {/* Title */}
-        <ThemedText style={styles.navbarTitle} numberOfLines={1}>
+        {/* Center: Title */}
+        <ThemedText type="title" style={styles.headerTitle}>
           {t('edit_profile')}
         </ThemedText>
 
-        {/* Right placeholder to balance layout */}
-        <View style={{ width: 44 }} />
+        {/* Right: Placeholder */}
+        <View style={styles.rightPlaceholder} />
       </View>
 
       {/* Form */}
@@ -133,13 +134,17 @@ export default function EditProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  navbar: {
+  // Reused header style logic from MyPrivacyScreen
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    height: 60,
+    paddingTop: 10,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
     backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   backButton: {
     width: 44,
@@ -147,12 +152,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  navbarTitle: {
+  headerTitle: {
     flex: 1,
-    fontSize: 20,
+    textAlign: 'center',
+    fontSize: 24,
     fontWeight: '700',
     color: '#111',
-    textAlign: 'center',
+    lineHeight: 36,
+    paddingVertical: 8,
+    paddingTop: 5,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+  },
+  rightPlaceholder: {
+    width: 44,
   },
   form: {
     padding: 20,
@@ -217,5 +230,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 20,
     fontWeight: '700',
+    lineHeight: 28,         
+    includeFontPadding: false, 
+    textAlignVertical: 'center', 
+    paddingTop: 4,          
   },
 });

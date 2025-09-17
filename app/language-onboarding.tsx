@@ -80,6 +80,10 @@ const styles = StyleSheet.create({
     marginBottom: 48,
     marginTop: -60,
     lineHeight: 40,
+    paddingVertical: 8,
+    paddingTop: 5,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   radioGroup: {
     width: width * 0.7,

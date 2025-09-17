@@ -9,10 +9,10 @@ import {
   Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
-  KeyboardTypeOptions,
   TouchableWithoutFeedback,
   Keyboard,
   SafeAreaView,
+  TextInputProps,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthMutation } from '../hooks/useAuthMutation';
@@ -22,7 +22,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import CountryPicker, { Country } from 'react-native-country-picker-modal';
 import axios from 'axios';
 
-// Move defaultValues and FIELDS here
+// Default form values
 const defaultValues = {
   fullname: '',
   age: '',
@@ -30,32 +30,32 @@ const defaultValues = {
   phoneNumber: '',
 };
 
-const FIELDS: Array<{
-  key: keyof typeof defaultValues;
-  prompt: string;
-  placeholder?: string;
-  keyboardType?: KeyboardTypeOptions;
-  required?: boolean;
-  type?: 'select';
-  options?: string[];
-  buttonText?: string;
-}> = [
-  { key: 'fullname', prompt: 'Great to see you!\nWhat’s your name?', placeholder: 'Type your name...', keyboardType: 'default', required: true, buttonText: 'Next' },
-  { key: 'age', prompt: 'Awesome!\nWhat’s your age?', placeholder: 'Type your age...', keyboardType: 'numeric', required: true, buttonText: 'Next' },
-  { key: 'gender', prompt: 'What’s your gender?', type: 'select', options: ['Male', 'Female', 'Prefer not to say'], required: true, buttonText: 'Next' },
-  { key: 'phoneNumber', prompt: 'Almost Done!\nWhat’s your WhatsApp number?', placeholder: 'Enter WhatsApp Number', keyboardType: 'phone-pad', required: true, buttonText: 'Register' },
-];
-
 export default function RegisterScreen() {
   const { mutate, isPending } = useAuthMutation('register');
-  const { control, handleSubmit, setValue, getValues, formState: { errors } } = useForm({
-    defaultValues: {
-      fullname: '',
-      age: '',
-      gender: '',
-      phoneNumber: '',
-    },
+  const { t } = useLanguage();
+  const router = useRouter();
+
+  // Define input fields
+  const FIELDS: Array<{
+    key: keyof typeof defaultValues;
+    prompt: string;
+    placeholder?: string;
+    keyboardType?: TextInputProps['keyboardType'];
+    required?: boolean;
+    type?: 'select';
+    options?: string[];
+    buttonText?: string;
+  }> = [
+    { key: 'fullname', prompt: t('register.prompt_fullname'), placeholder: t('register.placeholder_fullname'), keyboardType: 'default', required: true, buttonText: t('next') },
+    { key: 'age', prompt: t('register.prompt_age'), placeholder: t('register.placeholder_age'), keyboardType: 'numeric', required: true, buttonText: t('next') },
+    { key: 'gender', prompt: t('register.prompt_gender'), type: 'select', options: [t('male'), t('female'), t('prefer_not_to_say')], required: true, buttonText: t('next') },
+    { key: 'phoneNumber', prompt: t('register.prompt_phone'), placeholder: t('register.placeholder_phone'), keyboardType: 'phone-pad', required: true, buttonText: t('register_button') },
+  ];
+
+  const { control, handleSubmit, setValue, formState: { errors } } = useForm({
+    defaultValues,
   });
+
   const [step, setStep] = useState(0);
   const [country, setCountry] = useState<Country | null>(null);
   const [countryCode, setCountryCode] = useState('+91');
@@ -63,45 +63,47 @@ export default function RegisterScreen() {
   const [showPicker, setShowPicker] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [accountExists, setAccountExists] = useState(false);
-  const router = useRouter();
-  const { t } = useLanguage();
 
-// Clear the field value every time the step changes
-useEffect(() => {
-  const field = FIELDS[step];
-  setValue(field.key, '');   // clear current step's input
-}, [step, setValue]);
-
-
-  const handleNext = async (data: any) => {
+  // Clear current field on step change
+  useEffect(() => {
+    const field = FIELDS[step];
+    setValue(field.key, '');
     setErrorMsg('');
-    // Validate current step
+  }, [step, setValue]);
+
+  const handleNext = (data: any) => {
+    setErrorMsg('');
     const field = FIELDS[step];
     const value = data[field.key];
-    if (field.required && (!value || value.trim() === '')) {
-      setErrorMsg('This field is required');
+
+    if (field.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
+      setErrorMsg(t('error.field_required'));
       return;
     }
+
     if (field.key === 'fullname') {
-    const nameRegex = /^[A-Za-z\s]+$/;
-    if (!nameRegex.test(value)) {
-      setErrorMsg('Please enter a valid name (letters only)');
-      return;
+      const nameRegex = /^[A-Za-z\s]+$/;
+      if (!nameRegex.test(value)) {
+        setErrorMsg(t('error.invalid_name'));
+        return;
+      }
     }
-  }
+
     if (field.key === 'age' && (isNaN(Number(value)) || Number(value) < 1 || Number(value) > 120)) {
-      setErrorMsg('Please enter a valid age');
+      setErrorMsg(t('error.invalid_age'));
       return;
     }
+
     if (field.key === 'phoneNumber' && value.replace(/\D/g, '').length < 8) {
-      setErrorMsg('Please enter a valid phone number');
+      setErrorMsg(t('error.invalid_phone'));
       return;
     }
-    setStep((prev) => prev + 1);
+
+    // Increment step safely
+    setStep((prev) => Math.min(prev + 1, FIELDS.length - 1));
   };
 
-
-const handleBack = () => {
+  const handleBack = () => {
     setErrorMsg('');
     if (step === 0) {
       router.back();
@@ -110,26 +112,27 @@ const handleBack = () => {
     }
   };
 
-
-  const onSubmit = (formData: any) => {
+  const onSubmit = async (formData: any) => {
     const fullPhone = `${countryCode}${formData.phoneNumber}`;
     setAccountExists(false);
+
     const registrationData = {
       ...formData,
       phoneNumber: fullPhone,
     };
+
     mutate(registrationData, {
       onSuccess: (response) => {
-        Alert.alert('Registration Successful', `${response.message}`, [
+        Alert.alert(t('alert.registration_successful'), response.message, [
           {
-            text: 'OK',
+            text: t('ok'),
             onPress: async () => {
               try {
                 await axios.post('https://bot.swarnaayu.com/auth/login/', {
                   phone_number: fullPhone,
                 });
-              } catch (err) {
-                Alert.alert('Notice', 'OTP may not have been sent automatically. Please try logging in if you do not receive an OTP.');
+              } catch {
+                Alert.alert(t('alert.notice'), t('alert.otp_not_sent'));
               }
               router.push({ pathname: '/otp', params: { phoneNumber: fullPhone } });
             },
@@ -137,18 +140,17 @@ const handleBack = () => {
         ]);
       },
       onError: (error: any) => {
-        if (!error.response?.data?.exists) {
+        if (error.response?.data?.exists) {
           setAccountExists(true);
         } else {
-          Alert.alert('Something went wrong!!');
+          Alert.alert(t('error.something_went_wrong'));
         }
       },
     });
   };
 
   const field = FIELDS[step];
-  const totalSteps = FIELDS.length;
-  const isLastStep = step === totalSteps - 1;
+  const isLastStep = step === FIELDS.length - 1;
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -156,29 +158,29 @@ const handleBack = () => {
         <KeyboardAvoidingView
           style={styles.container}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0} // Adjusted for iOS
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
         >
-          {/* Progress Dots at the very top */}
           <View style={styles.progressContainer}>
             {FIELDS.map((_, idx) => (
               <View key={idx} style={[styles.progressDot, idx <= step ? styles.progressDotActive : null]} />
             ))}
           </View>
-          {/* Back button at top left */}
+
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-            <Ionicons name="chevron-back" size={30} color="#000000" />
+            <Ionicons name="chevron-back" size={30} color="#000" />
           </TouchableOpacity>
-          {/* Centered form content */}
+
           <View style={styles.centeredContent}>
             <Text style={styles.prompt}>{field.prompt}</Text>
+
             {field.type === 'select' ? (
               <Controller
                 control={control}
-                name={field.key as 'fullname' | 'age' | 'gender' | 'phoneNumber'}
+                name={field.key as 'gender'}
                 rules={{ required: true }}
                 render={({ field: { onChange, value } }) => (
                   <View style={styles.radioGroup}>
-                    {Array.isArray(field.options) && field.options.map((option: string) => (
+                    {field.options?.map((option: string) => (
                       <TouchableOpacity
                         key={option}
                         style={styles.radioOption}
@@ -196,7 +198,7 @@ const handleBack = () => {
             ) : field.key === 'phoneNumber' ? (
               <View style={styles.phoneRow}>
                 <TouchableOpacity style={styles.countryCodeBox} onPress={() => setShowPicker(true)}>
-                  <Text style={styles.countryCodeText}>{country ? `+${country.callingCode[0]}` : countryCode}</Text>
+                  <Text style={styles.countryCodeText}>{country ? `+${country.callingCode?.[0] ?? '91'}` : countryCode}</Text>
                   <Ionicons name="chevron-down" size={16} color="#6c63ff" style={{ marginLeft: 2 }} />
                 </TouchableOpacity>
                 <CountryPicker
@@ -206,7 +208,7 @@ const handleBack = () => {
                   withCountryNameButton={false}
                   withEmoji
                   onSelect={(country) => {
-                    setCountryCode('+' + country.callingCode[0]);
+                    setCountryCode('+' + country.callingCode?.[0] ?? '91');
                     setCca2(country.cca2);
                     setCountry(country);
                     setShowPicker(false);
@@ -229,7 +231,7 @@ const handleBack = () => {
                       style={styles.phoneInput}
                       placeholder={field.placeholder}
                       placeholderTextColor="#b3aefc"
-                      keyboardType={field.keyboardType as KeyboardTypeOptions}
+                      keyboardType={field.keyboardType}
                       maxLength={15}
                       onChangeText={onChange}
                       value={value}
@@ -240,43 +242,41 @@ const handleBack = () => {
             ) : (
               <Controller
                 control={control}
-                name={field.key as 'fullname' | 'age' | 'gender' | 'phoneNumber'}
+                name={field.key as 'fullname' | 'age'}
                 rules={{ required: true }}
                 render={({ field: { onChange, value } }) => (
                   <TextInput
                     style={styles.input}
                     placeholder={field.placeholder}
                     placeholderTextColor="#b3aefc"
-                    keyboardType={field.keyboardType as KeyboardTypeOptions}
+                    keyboardType={field.keyboardType}
                     onChangeText={onChange}
                     value={value}
                   />
                 )}
               />
             )}
+
             {errorMsg ? <Text style={styles.errorMsg}>{errorMsg}</Text> : null}
+
             {accountExists && (
-              <Text style={{ color: 'red', textAlign: 'center', marginBottom: 30 }}>
+              <Text style={styles.accountExistsText}>
                 {t('account_exists')}. {t('continue_to')}{' '}
-                <Text style={{ color: '#e53935', fontWeight: 'bold', textDecorationLine: 'underline' }} onPress={() => router.push('/login')}>
+                <Text style={styles.loginLink} onPress={() => router.push('/login')}>
                   {t('login')}
                 </Text>
                 .
               </Text>
             )}
           </View>
-          {/* Action button fixed at bottom */}
+
           <View style={styles.bottomButtonContainer}>
             <TouchableOpacity
               style={[styles.button, isPending && styles.buttonDisabled]}
               onPress={isLastStep ? handleSubmit(onSubmit) : handleSubmit(handleNext)}
               disabled={isPending}
             >
-              {isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>{field.buttonText || (isLastStep ? 'Register' : 'Next')}</Text>
-              )}
+              {isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{field.buttonText}</Text>}
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -285,7 +285,6 @@ const handleBack = () => {
   );
 }
 
-// Move styles to the end of the file
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -329,7 +328,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#6c63ff',
     borderRadius: 12,
-    padding: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
     fontSize: 18,
     color: '#222',
     marginBottom: 24,
@@ -451,5 +451,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
+  },
+  accountExistsText: {
+    color: 'red',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  loginLink: {
+    color: '#e53935',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
 });

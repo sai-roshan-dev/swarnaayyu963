@@ -1,18 +1,90 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import MicGradientIcon from './ui/MicIcon';
+import * as SecureStore from 'expo-secure-store';
 
 type Status = 'idle' | 'listening' | 'mic-off' | 'connecting' | 'speaking';
+type Language = 'English' | 'Hindi';
 
 type Props = {
   status: Status;
-  microphonePermisstion?: boolean;
+  microphonePermission?: boolean;
 };
 
-export default function VoiceBubble({ status, microphonePermisstion }: Props) {
+const languageMap: Record<string, Language> = {
+  en: 'English',
+  hi: 'Hindi',
+};
+
+const translations = {
+  English: {
+    connecting: 'Connecting...',
+    listening: 'Listening..',
+    speaking: 'speaking..',
+    tap_to_speak: 'Tap to Speak',
+    microphone_off: 'mic_off',
+  },
+  Hindi: {
+    connecting: 'कनेक्ट हो रहा है...',
+    listening: 'सुन रहा है..',
+    speaking: 'बोल रहा है..',
+    tap_to_speak: 'बोलने के लिए टैप करें',
+    microphone_off: 'माइक्रोफोन बंद',
+  },
+};
+
+export default function VoiceBubble({ status, microphonePermission }: Props) {
+  console.log("-----VoiceBubble rendered-----------------")
   const rotateAnim = useRef(new Animated.Value(0)).current;
+  const [language, setLanguage] = useState<Language>('English');
+
+  // Fetch language from API
+  const fetchLanguage = async () => {
+    try {
+      console.log('--- 🌐 [VOICEBUBBLE] Fetching language from API ---');
+      
+      const token = await SecureStore.getItemAsync('token');
+      console.log("token value......",token);
+
+      if (!token) {
+        console.log('--- ❌ [VOICEBUBBLE] No token found ---');
+        return;
+      }
+      
+      const response = await fetch('https://bot.swarnaayu.com/user/settings/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.log('--- ❌ [VOICEBUBBLE] API error:', response.status);
+        return;
+      }
+
+      const data = await response.json();
+      console.log('--- 📦 [VOICEBUBBLE] API response:', data);
+
+      const languageValue = data.language && languageMap[data.language] 
+        ? languageMap[data.language] 
+        : 'English';
+        
+      console.log('--- ✅ [VOICEBUBBLE] Language set to:', languageValue);
+      setLanguage(languageValue);
+      
+    } catch (error) {
+      console.log('--- ❌ [VOICEBUBBLE] Fetch error:', error);
+    }
+  };
+
+  useEffect(() => {
+    console.log('--- 🚀 [VOICEBUBBLE] Component mounted, fetching language ---');
+    fetchLanguage();
+  }, []);
 
   useEffect(() => {
     Animated.loop(
@@ -31,17 +103,18 @@ export default function VoiceBubble({ status, microphonePermisstion }: Props) {
   });
 
   const getText = () => {
+    const lang = translations[language];
     switch (status) {
       case 'connecting':
-        return 'Connecting...';
+        return lang.connecting;
       case 'listening':
-        return 'Listening..';
+        return lang.listening;
       case 'speaking':
-        return 'speaking..';
+        return lang.speaking;
       case 'idle':
-        return 'Tap to Speak';
+        return lang.tap_to_speak;
       case 'mic-off':
-        return 'mic_off';
+        return lang.microphone_off;
       default:
         return '';
     }
@@ -75,14 +148,10 @@ export default function VoiceBubble({ status, microphonePermisstion }: Props) {
 
   return (
     <View style={styles.container}>
-      {/* Three Outer Rings with subtle 3D perspective */}
       <OuterRing size={180} delay={0} animate={shouldAnimate} />
       <OuterRing size={220} delay={400} animate={shouldAnimate} />
       <OuterRing size={260} delay={800} animate={shouldAnimate} />
 
-      {/* Rotating Dashed Outline with minimal 3D tilt */}
-     
-      {/* Light Black Circle Line with subtle 3D effect */}
       <View style={styles.outerCircle}>
         <LinearGradient
           colors={['#4F46E5', '#4F46E5']}
@@ -133,27 +202,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 3,
-  },
-  rotatingOutlineContainer: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 2,
-  },
-  rotatingOutlineRing: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    borderWidth: 2,
-    borderColor: '#1E90FF',
-    borderStyle: 'dashed',
-    shadowColor: '#1E90FF',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
   },
   glow: {
     padding: 16,
